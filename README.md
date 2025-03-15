@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pii.Mail
 
-## Getting Started
+Modern, güvenli ve kullanıcı dostu bir e-posta uygulaması.
 
-First, run the development server:
+## Proje Hakkında
+
+Pii.Mail, gizliliğinizi ve güvenliğinizi ön planda tutan ilk açık kaynaklı e-posta uygulamasıdır. Modern özellikleri güvenilirlikle birleştirerek gerçekten sevebileceğiniz bir e-posta deneyimi sunar.
+
+### Özellikler
+
+- **Güvenli İletişim**: Uçtan uca şifreleme ile mesajlarınız her zaman güvende
+- **Hızlı Arayüz**: Modern teknolojilerle geliştirilmiş akıcı deneyim
+- **Karanlık Tema**: Göz yorgunluğunu azaltan şık tasarım
+- **Akıllı Filtreleme**: Yapay zeka destekli filtreleme
+- **Çoklu Hesap Desteği**: Tüm e-posta hesaplarınızı tek bir arayüzden yönetin
+- **Offline Erişim**: İnternet bağlantınız olmadığında bile e-postalarınıza erişin
+
+## Teknolojiler
+
+- Next.js 14
+- React
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+
+## Kurulum
+
+Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:
 
 ```bash
+# Depoyu klonlayın
+git clone https://github.com/kullaniciadi/pimail.git
+
+# Proje dizinine gidin
+cd pimail
+
+# Bağımlılıkları yükleyin
+npm install
+
+# Geliştirme sunucusunu başlatın
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcınızda [http://localhost:3000](http://localhost:3000) adresine giderek uygulamayı görüntüleyebilirsiniz.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Katkıda Bulunma
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Katkıda bulunmak istiyorsanız, lütfen bir fork oluşturun ve pull request gönderin. Büyük değişiklikler için, lütfen önce bir issue açarak neyi değiştirmek istediğinizi tartışın.
 
-## Learn More
+## Lisans
 
-To learn more about Next.js, take a look at the following resources:
+Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## İletişim
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Sorularınız veya önerileriniz için [iletisim@pii.email](mailto:iletisim@pii.email) adresine e-posta gönderebilirsiniz.
