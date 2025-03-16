@@ -63,7 +63,7 @@ export default function HakkimizdaPage() {
             <section className="bg-gray-900/50 backdrop-blur-md p-8 rounded-xl border border-gray-800 shadow-xl">
               <h2 className="text-2xl font-bold mb-4 text-purple-400">Hikayemiz</h2>
               <p className="text-gray-300 leading-relaxed mb-6">
-                PiMail, 2023 yılında bir grup gizlilik ve güvenlik tutkunu tarafından kuruldu. Büyük teknoloji şirketlerinin kullanıcı verilerini nasıl işlediğini gözlemledikten sonra, alternatif bir çözüm sunma ihtiyacı hissettik.
+                PiMail, 2025 yılında bir grup gizlilik ve güvenlik tutkunu tarafından kuruldu. Büyük teknoloji şirketlerinin kullanıcı verilerini nasıl işlediğini gözlemledikten sonra, alternatif bir çözüm sunma ihtiyacı hissettik.
               </p>
               <p className="text-gray-300 leading-relaxed mb-6">
                 Yolculuğumuz, kişisel verilerin korunması ve dijital gizliliğin sağlanması misyonuyla başladı. İlk prototipimizi geliştirdikten sonra, kullanıcı geri bildirimleri doğrultusunda sürekli olarak platformumuzu iyileştirdik.
