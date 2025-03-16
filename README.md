@@ -29,7 +29,7 @@ Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyi
 
 ```bash
 # Depoyu klonlayın
-git clone https://github.com/kullaniciadi/pimail.git
+git clone https://github.com/TolgaNogay/pimail.git
 
 # Proje dizinine gidin
 cd pimail
