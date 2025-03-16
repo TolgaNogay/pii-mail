@@ -1,49 +1,55 @@
 # PiMail Projesi
 
 ## Yapılanlar
-- [+] Modern, karanlık temalı landing page tasarımı yapıldı
-- [+] Geist ve Inter font aileleri entegre edildi
-- [+] Responsive tasarım uygulandı
-- [+] E-posta önizleme arayüzü oluşturuldu
-- [+] Bekleme listesi formu eklendi
-- [+] Özellikler bölümü eklendi
-- [+] Gradient ve blur efektleri uygulandı
-- [+] Footer bölümü eklendi
-- [+] Sosyal medya linkleri eklendi
-- [+] Framer Motion animasyonları eklendi
-- [+] Türkçe URL yapısı oluşturuldu (/giris, /iletisim)
-- [+] Giriş sayfası oluşturuldu
-- [+] İletişim sayfası oluşturuldu
-- [+] Kullanım Koşulları sayfası oluşturuldu
-- [+] Gizlilik Politikası sayfası oluşturuldu
-- [+] Yardım sayfası oluşturuldu
-- [+] Kayıt ol sayfası oluşturuldu
-- [+] Hakkımızda sayfası oluşturuldu
-- [+] 404 sayfası oluşturuldu
+[+] Modern, karanlık temalı landing page tasarımı yapıldı
+[+] Geist ve Inter font aileleri entegre edildi
+[+] Responsive tasarım uygulandı
+[+] E-posta önizleme arayüzü oluşturuldu
+[+] Bekleme listesi formu eklendi
+[+] Özellikler bölümü eklendi
+[+] Gradient ve blur efektleri uygulandı
+[+] Footer bölümü eklendi
+[+] Sosyal medya linkleri eklendi
+[+] Framer Motion animasyonları eklendi
+[+] Türkçe URL yapısı oluşturuldu (/giris, /iletisim)
+[+] Giriş sayfası oluşturuldu
+[+] İletişim sayfası oluşturuldu
+[+] Kullanım Koşulları sayfası oluşturuldu
+[+] Gizlilik Politikası sayfası oluşturuldu
+[+] Yardım sayfası oluşturuldu
+[+] Kayıt ol sayfası oluşturuldu
+[+] Hakkımızda sayfası oluşturuldu
+[+] 404 sayfası oluşturuldu
+[+] Tüm websitesinde "pi.email" ve "pi.mail" bağlantıları "pii.email" olarak standardize edildi
+[+] Tüm websitesinde "PiMail" yazıları "Pii.Mail" olarak güncellendi
+[+] Giriş sayfasındaki e-posta alanı "ad@pii.email" formatında yeniden tasarlandı
+[+] Şifremi unuttum sayfası oluşturuldu ve bot doğrulaması eklendi
+[+] Proje GitHub'a yüklendi
+[+] Proje Vercel'e deploy edildi
 
 ## Yapılacaklar
-- [-] Kullanıcı kimlik doğrulama sistemi (OAuth, JWT veya Magic Link)
-- [-] Kullanıcı profil sayfası
-- [-] Mail arayüzü
-  - [-] Gelen kutusu
-  - [-] E-posta okuma sayfası
-  - [-] E-posta yazma sayfası
-  - [-] Arşivleme ve etiketleme sistemi
-- [-] Backend entegrasyonu
-  - [-] IMAP/SMTP servisleri için API rotaları
-  - [-] Veritabanı şeması (PostgreSQL veya MongoDB)
-  - [-] Kullanıcı hesap yönetimi
-- [-] Güvenlik önlemleri
-  - [-] Spam filtreleme
-  - [-] SPF, DKIM, DMARC entegrasyonu
-  - [-] Uçtan uca şifreleme
-- [-] Mobil uyumluluk iyileştirmeleri
-- [-] Tema seçenekleri (açık/koyu tema)
-- [-] Çoklu dil desteği
-- [-] Performans optimizasyonları
-- [-] Erişilebilirlik iyileştirmeleri
-- [-] Kullanıcı testleri ve geri bildirim entegrasyonu
-- [-] Diğer sayfaların tamamlanması (özellikler, fiyatlandırma, blog, güvenlik)
+[-] Kullanıcı kimlik doğrulama sistemi (OAuth, JWT veya Magic Link)
+[-] Kullanıcı profil sayfası
+[-] Mail arayüzü
+  [-] Gelen kutusu
+  [-] E-posta okuma sayfası
+  [-] E-posta yazma sayfası
+  [-] Arşivleme ve etiketleme sistemi
+[-] Backend entegrasyonu
+  [-] IMAP/SMTP servisleri için API rotaları
+  [-] Veritabanı şeması (PostgreSQL veya MongoDB)
+  [-] Kullanıcı hesap yönetimi
+[-] Güvenlik önlemleri
+  [-] Spam filtreleme
+  [-] SPF, DKIM, DMARC entegrasyonu
+  [-] Uçtan uca şifreleme
+[-] Mobil uyumluluk iyileştirmeleri
+[-] Tema seçenekleri (açık/koyu tema)
+[-] Çoklu dil desteği
+[-] Performans optimizasyonları
+[-] Erişilebilirlik iyileştirmeleri
+[-] Kullanıcı testleri ve geri bildirim entegrasyonu
+[-] Diğer sayfaların tamamlanması (özellikler, fiyatlandırma, blog, güvenlik)
 
 ## Teknoloji Yığını
 - **Frontend**: Next.js, Tailwind CSS, React, Framer Motion

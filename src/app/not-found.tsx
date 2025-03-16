@@ -1,37 +1,28 @@
 'use client';
-import Link from "next/link";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function NotFound() {
-  const router = useRouter();
-  const [countdown, setCountdown] = useState(3);
-
+  const [countdown, setCountdown] = useState(10);
+  
   useEffect(() => {
-    // 3 saniye sonra ana sayfaya yönlendir
-    const timer = setTimeout(() => {
-      router.push('/');
-    }, 3000);
-
-    // Geri sayım için interval
-    const countdownInterval = setInterval(() => {
+    const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(countdownInterval);
+          clearInterval(timer);
+          window.location.href = '/';
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
-
-    // Component unmount olduğunda timer'ı temizle
-    return () => {
-      clearTimeout(timer);
-      clearInterval(countdownInterval);
-    };
-  }, [router]);
-
+    
+    return () => clearInterval(timer);
+  }, []);
+  
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -52,13 +43,16 @@ export default function NotFound() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white relative z-10">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Image 
+                src="/images/logo.svg" 
+                alt="Pii.Mail Logo" 
+                width={28} 
+                height={28} 
+                className="relative z-10"
+                priority
+              />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">PiMail</span>
+            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Pii.Mail</span>
           </Link>
           <div className="flex gap-3">
             <Link 
@@ -97,17 +91,17 @@ export default function NotFound() {
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white font-medium transition-colors shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
             >
               Ana Sayfaya Dön
             </Link>
-            <Link 
-              href="/yardim" 
+            <Link
+              href="/iletisim" 
               className="px-6 py-3 bg-gray-800/70 hover:bg-gray-700/70 rounded-lg text-white font-medium transition-colors"
             >
-              Yardım Sayfası
+              İletişime Geçin
             </Link>
           </div>
           
@@ -116,11 +110,11 @@ export default function NotFound() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Link href="/hakkimizda" className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-colors text-left">
                 <div className="font-medium text-white">Hakkımızda</div>
-                <div className="text-sm text-gray-400">PiMail'in hikayesi ve vizyonu</div>
+                <div className="text-sm text-gray-400">Pii.Mail'in hikayesi ve vizyonu</div>
               </Link>
               <Link href="/ozellikler" className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-colors text-left">
                 <div className="font-medium text-white">Özellikler</div>
-                <div className="text-sm text-gray-400">PiMail'in sunduğu özellikler</div>
+                <div className="text-sm text-gray-400">Pii.Mail'in sunduğu özellikler</div>
               </Link>
               <Link href="/iletisim" className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-colors text-left">
                 <div className="font-medium text-white">İletişim</div>
@@ -138,7 +132,7 @@ export default function NotFound() {
       {/* Simple Footer */}
       <div className="relative z-10 py-4 text-xs text-gray-500 border-t border-gray-800/50 bg-black/30 backdrop-blur-sm">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <div>© 2025 PiMail Inc. — tüm hakları saklıdır.</div>
+          <div>© 2024 Pii.Mail — tüm hakları saklıdır.</div>
           <div className="flex space-x-4">
             <Link href="/kullanim-kosullari" className="text-gray-400 hover:text-white transition-colors">Kullanım Koşulları</Link>
             <Link href="/gizlilik" className="text-gray-400 hover:text-white transition-colors">Gizlilik ve Tanımlama Bilgileri</Link>

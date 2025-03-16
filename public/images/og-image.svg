@@ -1,0 +1,41 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)" />
+  
+  <!-- Background Elements -->
+  <circle cx="200" cy="100" r="300" fill="url(#circle1)" opacity="0.3" />
+  <circle cx="1000" cy="500" r="250" fill="url(#circle2)" opacity="0.3" />
+  
+  <!-- Logo -->
+  <g transform="translate(150, 215) scale(1)">
+    <circle cx="100" cy="100" r="90" fill="url(#logo-gradient)" />
+    <circle cx="100" cy="100" r="70" stroke="white" stroke-width="4" fill="none" />
+    <circle cx="100" cy="100" r="40" stroke="white" stroke-width="4" fill="none" />
+    <circle cx="100" cy="100" r="15" fill="white" />
+  </g>
+  
+  <!-- Text -->
+  <text x="350" y="250" font-family="Arial, sans-serif" font-weight="bold" font-size="72" fill="white">Pii.Mail</text>
+  <text x="350" y="330" font-family="Arial, sans-serif" font-size="36" fill="white">Gizlilik, Hız, Güven</text>
+  <text x="350" y="400" font-family="Arial, sans-serif" font-size="24" fill="white" opacity="0.8">Modern, güvenli ve kullanıcı dostu e-posta deneyimi</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#000000" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="circle1" x1="0" y1="0" x2="400" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="circle2" x1="800" y1="300" x2="1200" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="logo-gradient" x1="10" y1="10" x2="190" y2="190" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+  </defs>
+</svg> 
