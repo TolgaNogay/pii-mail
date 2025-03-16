@@ -4,8 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Footer from "@/components/ui/Footer";
 import { NextSeo } from "next-seo";
-import { JsonLd } from "react-schemaorg";
-import { WebSite, Organization } from "schema-dts";
 import { lazy, Suspense } from "react";
 
 // Lazy loading için bileşenleri tanımlıyorum
@@ -30,36 +28,6 @@ export default function Home() {
               height: 630,
               alt: "Pii.Mail",
             },
-          ],
-        }}
-      />
-      
-      <JsonLd<WebSite>
-        item={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Pii.Mail",
-          url: "https://pii.email",
-          potentialAction: {
-            "@type": "SearchAction",
-            target: "https://pii.email/search?q={search_term_string}",
-            query: "required name=search_term_string"
-          },
-        }}
-      />
-      
-      <JsonLd<Organization>
-        item={{
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "Pii.Mail",
-          url: "https://pii.email",
-          logo: "https://pii.email/images/logo.png",
-          sameAs: [
-            "https://twitter.com/pimailapp",
-            "https://www.instagram.com/pimailapp",
-            "https://github.com/pimail",
-            "https://www.linkedin.com/company/pimail",
           ],
         }}
       />
