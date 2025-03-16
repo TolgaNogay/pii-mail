@@ -104,6 +104,9 @@ export const metadata: Metadata = {
     title: "Pii.Mail",
     statusBarStyle: "black-translucent",
   },
+  verification: {
+    google: 'pgjj09GT1Pn-QtscwvfDLSzStihMzmYIb1YGUBaoQ9A',
+  },
 };
 
 export default function RootLayout({
