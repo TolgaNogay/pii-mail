@@ -9,8 +9,8 @@ import { WebSite, Organization } from "schema-dts";
 import { lazy, Suspense } from "react";
 
 // Lazy loading için bileşenleri tanımlıyorum
-const LazyFeatures = lazy(() => import("@/components/home/Features"));
-const LazyEmailPreview = lazy(() => import("@/components/home/EmailPreview"));
+const LazyFeatures = lazy(() => import("../components/home/Features"));
+const LazyEmailPreview = lazy(() => import("../components/home/EmailPreview"));
 
 export default function Home() {
   return (

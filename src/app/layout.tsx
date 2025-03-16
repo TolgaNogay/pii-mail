@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Inter } from "next/font/google";
 import { AnimatePresence } from "framer-motion";
@@ -23,6 +23,16 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
+};
 
 export const metadata: Metadata = {
   title: {
@@ -90,15 +100,6 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/site.webmanifest',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-  ],
   appleWebApp: {
     capable: true,
     title: "Pii.Mail",
