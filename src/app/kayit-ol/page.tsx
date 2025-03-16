@@ -2,8 +2,12 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { auth } from '@/lib/supabase';
 
-export default function KayitOlPage() {
+export default function SignUp() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,6 +26,9 @@ export default function KayitOlPage() {
     match: true
   });
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // E-posta değiştiğinde prefix'i güncelle
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,19 +110,47 @@ export default function KayitOlPage() {
   };
 
   // Form gönderildiğinde
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Şifre gereksinimleri karşılanıyor mu kontrol et
-    const hasErrors = Object.values(passwordErrors).some(error => error);
-    
-    if (hasErrors) {
-      alert("Lütfen tüm şifre gereksinimlerini karşılayın.");
+    setError(null);
+    setSuccess(null);
+
+    // Doğrulama kontrolleri
+    if (!email || !password || !confirmPassword) {
+      setError('Lütfen tüm alanları doldurun.');
       return;
     }
-    
-    // Form gönderme işlemleri burada yapılacak
-    console.log("Form gönderildi", { name, email, password });
+
+    if (password !== confirmPassword) {
+      setError('Şifreler eşleşmiyor.');
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('Şifre en az 8 karakter olmalıdır.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error: signUpError } = await auth.signUp(email, password);
+
+      if (signUpError) {
+        throw signUpError;
+      }
+
+      setSuccess('Kayıt başarılı! E-posta adresinize gönderilen doğrulama bağlantısını kontrol edin.');
+      
+      // Kullanıcı doğrulama e-postası gönderildikten sonra giriş sayfasına yönlendir
+      setTimeout(() => {
+        router.push('/giris');
+      }, 3000);
+    } catch (err: any) {
+      console.error('Kayıt hatası:', err);
+      setError(err.message || 'Kayıt sırasında bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Şifre görünürlüğünü değiştir
@@ -148,13 +183,15 @@ export default function KayitOlPage() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white relative z-10">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Image 
+                src="/images/logo.svg" 
+                alt="Pii.Mail Logo" 
+                width={28} 
+                height={28} 
+                className="relative z-10"
+              />
             </div>
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">PiMail</span>
+            <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Pii.Mail</span>
           </Link>
         </div>
       </header>
@@ -172,7 +209,19 @@ export default function KayitOlPage() {
             <p className="text-gray-400">PiMail hesabı oluşturun</p>
           </div>
           
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg p-4 mb-6 text-sm">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-500/10 border border-green-500/20 text-green-500 rounded-lg p-4 mb-6 text-sm">
+              {success}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleSignUp}>
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium text-gray-300">Ad Soyad</label>
               <input
@@ -336,12 +385,21 @@ export default function KayitOlPage() {
               </label>
             </div>
             
-            <button
-              type="submit"
-              className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-            >
-              Kayıt Ol
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-lg font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center"
+              >
+                {loading ? (
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : null}
+                {loading ? 'İşleniyor...' : 'Kayıt Ol'}
+              </button>
+            </div>
           </form>
           
           <div className="mt-6 text-center">

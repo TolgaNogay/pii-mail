@@ -2,16 +2,49 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { auth } from '@/lib/supabase';
 
 export default function GirisPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [emailPrefix, setEmailPrefix] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmailPrefix(value);
     setEmail(value + '@pii.email');
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError('Lütfen e-posta ve şifrenizi girin.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const { data, error: signInError } = await auth.signIn(email, password);
+
+      if (signInError) {
+        throw signInError;
+      }
+
+      // Başarılı giriş sonrası ana sayfaya yönlendir
+      router.push('/dashboard');
+    } catch (err: any) {
+      console.error('Giriş hatası:', err);
+      setError(err.message || 'Giriş sırasında bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,11 +67,13 @@ export default function GirisPage() {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white relative z-10">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Image 
+                src="/images/logo.svg" 
+                alt="Pii.Mail Logo" 
+                width={28} 
+                height={28} 
+                className="relative z-10"
+              />
             </div>
             <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Pii.Mail</span>
           </Link>
@@ -58,7 +93,13 @@ export default function GirisPage() {
             <p className="text-gray-400">Pii.Mail hesabınıza giriş yapın</p>
           </div>
           
-          <form className="space-y-6">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 rounded-lg p-4 mb-6 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium text-gray-300">E-posta</label>
               <div className="flex items-center w-full bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
@@ -103,12 +144,21 @@ export default function GirisPage() {
               <label htmlFor="remember" className="ml-2 block text-sm text-gray-300">Beni hatırla</label>
             </div>
             
-            <button
-              type="submit"
-              className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-            >
-              Giriş Yap
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center"
+              >
+                {loading ? (
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : null}
+                {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
+              </button>
+            </div>
           </form>
           
           <div className="mt-6 text-center">
