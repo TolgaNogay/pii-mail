@@ -8,9 +8,13 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   experimental: {
-    optimizeCss: true,
     scrollRestoration: true,
   },
+  // Vercel için yapılandırma
+  distDir: '.next',
+  poweredByHeader: false,
+  generateEtags: true,
+  compress: true,
 }
 
 module.exports = nextConfig 

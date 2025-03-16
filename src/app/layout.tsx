@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Inter } from "next/font/google";
 import { AnimatePresence } from "framer-motion";
 import "./globals.css";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -112,6 +113,44 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
+      <head>
+        <Script
+          id="schema-website"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Pii.Mail",
+              url: "https://pii.email",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://pii.email/search?q={search_term_string}",
+                query: "required name=search_term_string"
+              },
+            })
+          }}
+        />
+        <Script
+          id="schema-organization"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Pii.Mail",
+              url: "https://pii.email",
+              logo: "https://pii.email/images/logo.png",
+              sameAs: [
+                "https://twitter.com/pimailapp",
+                "https://www.instagram.com/pimailapp",
+                "https://github.com/pimail",
+                "https://www.linkedin.com/company/pimail",
+              ],
+            })
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >
