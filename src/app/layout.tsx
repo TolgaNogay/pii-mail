@@ -2,8 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Inter } from "next/font/google";
 import { AnimatePresence } from "framer-motion";
-import { DefaultSeo } from "next-seo";
-import defaultSEOConfig from "@/lib/seo.config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -114,7 +112,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <DefaultSeo {...defaultSEOConfig} />
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
       >

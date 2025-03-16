@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Footer from "@/components/ui/Footer";
-import { NextSeo } from "next-seo";
 import { lazy, Suspense } from "react";
 
 // Lazy loading için bileşenleri tanımlıyorum
@@ -13,25 +12,6 @@ const LazyEmailPreview = lazy(() => import("../components/home/EmailPreview"));
 export default function Home() {
   return (
     <>
-      <NextSeo
-        title="Pii.Mail — Gizlilik, Hız, Güven"
-        description="Modern, güvenli ve kullanıcı dostu e-posta deneyimi. Gizliliğinizi ve güvenliğinizi ön planda tutan açık kaynaklı e-posta çözümü."
-        canonical="https://pii.email"
-        openGraph={{
-          url: "https://pii.email",
-          title: "Pii.Mail — Gizlilik, Hız, Güven",
-          description: "Modern, güvenli ve kullanıcı dostu e-posta deneyimi. Gizliliğinizi ve güvenliğinizi ön planda tutan açık kaynaklı e-posta çözümü.",
-          images: [
-            {
-              url: "https://pii.email/images/og-image.jpg",
-              width: 1200,
-              height: 630,
-              alt: "Pii.Mail",
-            },
-          ],
-        }}
-      />
-      
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
