@@ -9,6 +9,7 @@ const nextConfig = {
   },
   experimental: {
     scrollRestoration: true,
+    optimizeCss: false,
   },
   // Vercel için yapılandırma
   distDir: '.next',
