@@ -7,14 +7,12 @@
   --foreground: #171717;
 }
 
-@layer base {
-  :root {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-    --font-inter: var(--font-inter);
-  }
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
