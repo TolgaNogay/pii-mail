@@ -68,7 +68,7 @@ export default function Home() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white font-[family-name:var(--font-geist-sans)] flex flex-col relative overflow-hidden"
+      className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white font-sans flex flex-col relative overflow-hidden"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

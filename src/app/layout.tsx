@@ -5,7 +5,11 @@ import { DefaultSeo } from "next-seo";
 import defaultSEOConfig from "@/lib/seo.config";
 import "./globals.css";
 
-// Inter fontunu kullanıyoruz (Next.js tarafından desteklenen font)
+// Geist fontunu import ediyorum (ekran görüntüsündeki yönteme göre)
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+
+// Inter fontunu da koruyoruz
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -103,7 +107,7 @@ export default function RootLayout({
     <html lang="tr">
       <DefaultSeo {...defaultSEOConfig} />
       <body
-        className={`${inter.variable} antialiased`}
+        className={`${GeistSans.variable} ${GeistMono.variable} ${inter.variable} antialiased`}
       >
         <AnimatePresence>
           {children}
