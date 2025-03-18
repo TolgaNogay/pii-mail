@@ -35,6 +35,12 @@ export default function Home() {
           </div>
           <div className="flex gap-3">
             <Link 
+              href="/bulut" 
+              className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm hover:border-white/40"
+            >
+              Bulut
+            </Link>
+            <Link 
               href="/giris" 
               className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm hover:border-white/40"
             >

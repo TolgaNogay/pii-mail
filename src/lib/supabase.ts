@@ -1,13 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL ve Anon Key tanımlanmamış. Lütfen .env.local dosyasını kontrol edin.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export type User = {
+  id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+  role: 'user' | 'admin';
+  storage_used: number;
+  storage_limit: number;
+  is_verified: boolean;
+  is_blocked: boolean;
+  last_login: string;
+};
 
 // Kullanıcı kimlik doğrulama işlemleri
 export const auth = {
