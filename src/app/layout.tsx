@@ -1,38 +1,16 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { AnimatePresence } from "framer-motion";
+import { DefaultSeo } from "next-seo";
+import defaultSEOConfig from "@/lib/seo.config";
 import "./globals.css";
-import Script from "next/script";
-import { AuthProvider } from "@/contexts/AuthContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
+// Inter fontunu kullanıyoruz (Next.js tarafından desteklenen font)
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#000000' },
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-  ],
-};
 
 export const metadata: Metadata = {
   title: {
@@ -65,7 +43,7 @@ export const metadata: Metadata = {
     siteName: "Pii.Mail",
     images: [
       {
-        url: "https://pii.email/images/og-image.jpg",
+        url: "https://pii.email/images/og-image.svg",
         width: 1200,
         height: 630,
         alt: "Pii.Mail",
@@ -78,7 +56,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Pii.Mail — Gizlilik, Hız, Güven",
     description: "Modern, güvenli ve kullanıcı dostu e-posta deneyimi. Gizliliğinizi ve güvenliğinizi ön planda tutan açık kaynaklı e-posta çözümü.",
-    images: ["https://pii.email/images/og-image.jpg"],
+    images: ["https://pii.email/images/og-image.svg"],
     creator: "@piimail",
     site: "@piimail",
   },
@@ -100,13 +78,19 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/site.webmanifest',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+  ],
   appleWebApp: {
     capable: true,
     title: "Pii.Mail",
     statusBarStyle: "black-translucent",
-  },
-  verification: {
-    google: 'pgjj09GT1Pn-QtscwvfDLSzStihMzmYIb1YGUBaoQ9A',
   },
 };
 
@@ -117,52 +101,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <head>
-        <Script
-          id="schema-website"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "Pii.Mail",
-              url: "https://pii.email",
-              potentialAction: {
-                "@type": "SearchAction",
-                target: "https://pii.email/search?q={search_term_string}",
-                query: "required name=search_term_string"
-              },
-            })
-          }}
-        />
-        <Script
-          id="schema-organization"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "Pii.Mail",
-              url: "https://pii.email",
-              logo: "https://pii.email/images/logo.png",
-              sameAs: [
-                "https://twitter.com/pimailapp",
-                "https://www.instagram.com/pimailapp",
-                "https://github.com/pimail",
-                "https://www.linkedin.com/company/pimail",
-              ],
-            })
-          }}
-        />
-      </head>
+      <DefaultSeo {...defaultSEOConfig} />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        className={`${inter.variable} antialiased`}
       >
-        <AuthProvider>
-          <AnimatePresence>
-            {children}
-          </AnimatePresence>
-        </AuthProvider>
+        <AnimatePresence>
+          {children}
+        </AnimatePresence>
       </body>
     </html>
   );

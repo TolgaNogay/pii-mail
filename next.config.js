@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
   images: {
     domains: ['pii.email'],
     formats: ['image/avif', 'image/webp'],
@@ -8,14 +9,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   experimental: {
+    optimizeCss: true,
     scrollRestoration: true,
-    optimizeCss: false,
   },
-  // Vercel için yapılandırma
-  distDir: '.next',
-  poweredByHeader: false,
-  generateEtags: true,
-  compress: true,
 }
 
 module.exports = nextConfig 
