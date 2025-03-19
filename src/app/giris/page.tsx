@@ -3,10 +3,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/supabase';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function GirisPage() {
   const router = useRouter();
+  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [emailPrefix, setEmailPrefix] = useState("");
   const [password, setPassword] = useState("");
@@ -14,15 +15,16 @@ export default function GirisPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Kullanıcı giriş durumunu kontrol et
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await auth.getUser();
-      if (user) {
-        router.push('/gelenkutusu');
-      }
-    };
-    checkAuth();
-  }, [router]);
+  // useEffect(() => {
+  //   const checkAuth = async () => {
+  //     const { data: { user } } = await auth.getUser();
+  //     console.log("GirisPage - Kullanıcı durumu:", user ? "Oturum açık" : "Oturum kapalı", user);
+  //     if (user) {
+  //       router.push('/gelenkutusu');
+  //     }
+  //   };
+  //   checkAuth();
+  // }, [router]);
 
   const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -36,13 +38,17 @@ export default function GirisPage() {
     setLoading(true);
 
     try {
-      const { error: signInError } = await auth.signIn(email, password);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (signInError) {
         throw signInError;
       }
 
-      router.push('/gelenkutusu');
+      console.log("Giriş başarılı, kullanıcı:", data.user);
+      window.location.href = '/gelenkutusu'; // router.push yerine window.location.href kullan
     } catch (err: any) {
       console.error('Giriş hatası:', err);
       if (err.message === 'Invalid login credentials') {
