@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Person, ArrowBack, Settings, Edit, Camera, Mail, Phone, CalendarMonth, CloudUpload } from '@mui/icons-material';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -14,9 +15,10 @@ export default function ProfilePage() {
     lastName: '',
     bio: 'Merhaba! Ben PiiMail kullanıcısıyım.',
     location: 'İstanbul, Türkiye',
-    phone: '+90 555 123 45 67',
+    phone: '',
     website: 'website.com',
-    joinDate: 'Mart 2023'
+    joinDate: '',
+    avatarUrl: ''
   });
   const [userEmail, setUserEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -61,13 +63,18 @@ export default function ProfilePage() {
           }
         }
         
-        setUserData({
-          ...userData,
-          firstName,
-          lastName
-        });
+        // Kullanıcı oluşturulma tarihini hesapla
+        const createdAt = user.created_at;
+        const joinDate = createdAt ? formatJoinDate(createdAt) : 'Bilinmiyor';
         
-        // Ayrıca profil tablosundan bilgileri de almaya çalış
+        setUserData(prevData => ({
+          ...prevData,
+          firstName,
+          lastName,
+          joinDate
+        }));
+        
+        // Profil tablosundan bilgileri almaya çalış
         fetchUserData(user.id);
       }
     } catch (error) {
@@ -77,21 +84,35 @@ export default function ProfilePage() {
     }
   };
 
+  // Katılma tarihini formatla
+  const formatJoinDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
+    return new Intl.DateTimeFormat('tr-TR', options).format(date);
+  };
+
   const fetchUserData = async (userId: string) => {
     try {
-      // Önce user tablosunu kontrol et
+      // users tablosundan temel bilgileri al
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name')
+        .select('first_name, last_name, phone, avatar_url, bio')
         .eq('id', userId)
         .single();
       
-      if (!userError && userData && userData.first_name) {
+      if (!userError && userData) {
         console.log('Users tablosundan kullanıcı verileri alındı:', userData);
+        
+        // Telefon numarası yok ise, güvenli bir varsayılan değer belirle
+        const phone = userData.phone || '+90 --- --- -- --';
+        
         setUserData(prevData => ({
           ...prevData,
-          firstName: userData.first_name,
-          lastName: userData.last_name || ''
+          firstName: userData.first_name || prevData.firstName,
+          lastName: userData.last_name || prevData.lastName,
+          phone: phone,
+          bio: userData.bio || prevData.bio,
+          avatarUrl: userData.avatar_url || ''
         }));
         return;
       }
@@ -99,22 +120,36 @@ export default function ProfilePage() {
       // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('full_name, avatar_url, phone')
         .eq('id', userId)
         .single();
       
-      if (!profileError && profileData && profileData.full_name) {
+      if (!profileError && profileData) {
         console.log('Profiles tablosundan kullanıcı verileri alındı:', profileData);
-        const nameParts = profileData.full_name.split(' ');
+        const nameParts = profileData.full_name ? profileData.full_name.split(' ') : [];
+        
         setUserData(prevData => ({
           ...prevData,
-          firstName: nameParts[0] || 'Kullanıcı',
-          lastName: nameParts.slice(1).join(' ') || ''
+          firstName: nameParts[0] || prevData.firstName,
+          lastName: nameParts.slice(1).join(' ') || prevData.lastName,
+          phone: profileData.phone || prevData.phone,
+          avatarUrl: profileData.avatar_url || prevData.avatarUrl
         }));
       }
     } catch (error) {
       console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
     }
+  };
+
+  // Avatar URL'si oluştur
+  const getAvatarUrl = () => {
+    if (userData.avatarUrl) {
+      return userData.avatarUrl;
+    }
+    
+    // Kullanıcı adını parametre olarak kullanarak tutarlı bir avatar oluştur
+    const seed = `${userData.firstName}-${userData.lastName}`.toLowerCase() || userEmail;
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=2563eb,4f46e5`;
   };
 
   if (isLoading) {
@@ -162,10 +197,11 @@ export default function ProfilePage() {
           <div className="absolute -bottom-14 left-8 md:left-12">
             <div className="relative">
               <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-gray-900 shadow-xl">
+                {/* Güvenilir avatar servisi kullanımı */}
                 <img 
-                  src={`https://i.pravatar.cc/144?u=${userData.firstName}`} 
+                  src={getAvatarUrl()}
                   alt={`${userData.firstName} ${userData.lastName}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover bg-gray-800"
                 />
               </div>
               <button className="absolute right-1 bottom-1 p-2 bg-gray-900/70 rounded-full hover:bg-gray-900 transition-colors border border-gray-700">
