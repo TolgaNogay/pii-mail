@@ -96,36 +96,6 @@ export default function HakkimizdaPage() {
             </section>
             
             <section className="bg-gray-900/50 backdrop-blur-md p-8 rounded-xl border border-gray-800 shadow-xl">
-              <h2 className="text-2xl font-bold mb-4 text-purple-400">Ekibimiz</h2>
-              <p className="text-gray-300 leading-relaxed mb-6">
-                PiMail, güvenlik, gizlilik ve kullanıcı deneyimi konularında uzman bir ekip tarafından geliştirilmektedir. Ekibimiz, dünyanın önde gelen teknoloji şirketlerinde deneyim kazanmış profesyonellerden oluşmaktadır.
-              </p>
-              <div className="grid md:grid-cols-3 gap-6 mt-8">
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4 flex items-center justify-center">
-                    <span className="text-2xl font-bold">AY</span>
-                  </div>
-                  <h3 className="text-lg font-semibold">Ali Yılmaz</h3>
-                  <p className="text-gray-400">Kurucu & CEO</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mb-4 flex items-center justify-center">
-                    <span className="text-2xl font-bold">MK</span>
-                  </div>
-                  <h3 className="text-lg font-semibold">Merve Kaya</h3>
-                  <p className="text-gray-400">CTO</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-green-500 to-blue-600 rounded-full mb-4 flex items-center justify-center">
-                    <span className="text-2xl font-bold">ED</span>
-                  </div>
-                  <h3 className="text-lg font-semibold">Emre Demir</h3>
-                  <p className="text-gray-400">Güvenlik Direktörü</p>
-                </div>
-              </div>
-            </section>
-            
-            <section className="bg-gray-900/50 backdrop-blur-md p-8 rounded-xl border border-gray-800 shadow-xl">
               <h2 className="text-2xl font-bold mb-4 text-blue-400">Bize Ulaşın</h2>
               <p className="text-gray-300 leading-relaxed mb-6">
                 Sorularınız, önerileriniz veya işbirliği teklifleriniz için bizimle iletişime geçebilirsiniz.
