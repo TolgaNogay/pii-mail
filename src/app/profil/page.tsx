@@ -3,47 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Person, ArrowBack, Settings, Edit, Camera, Mail, Phone, CalendarMonth, CloudUpload, CalendarToday, LocationOn, Link, Storage } from '@mui/icons-material';
+import { Person, ArrowBack, Settings, Edit, Camera, Mail, Phone, CalendarMonth, CloudUpload } from '@mui/icons-material';
 import Image from 'next/image';
-
-// Update the user interface to match the new database schema
-interface User {
-  id: string;
-  email: string;
-  created_at: string;
-  role: string;
-  storage_size: number;
-  avatar_url?: string;
-  first_name?: string;
-  last_name?: string;
-  bio?: string;
-  location?: string;
-  phone?: string;
-  website?: string;
-}
 
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [loading, setLoading] = useState(true);
-  // Update userdata state to match new interface
-  const [userData, setUserData] = useState<User>({
-    id: '',
-    email: '',
-    created_at: '',
-    role: 'user',
-    storage_size: 0,
-    first_name: '',
-    last_name: '',
-    bio: '',
-    location: '',
+  const [userData, setUserData] = useState({ 
+    firstName: '',
+    lastName: '',
+    bio: 'Merhaba! Ben PiiMail kullanıcısıyım.',
+    location: 'İstanbul, Türkiye',
     phone: '',
-    website: ''
+    website: 'website.com',
+    joinDate: '',
+    avatarUrl: ''
   });
-  const [joinDate, setJoinDate] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-
+  const [userEmail, setUserEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
     checkUser();
   }, []);
@@ -55,112 +34,125 @@ export default function ProfilePage() {
       if (!user && !isRedirecting) {
         setIsRedirecting(true);
         setTimeout(() => {
-          router.push('/giris');
+          window.location.href = '/giris';
         }, 100);
       } else if (user) {
-        // User verilerini alırken başlangıç değerleri ata
-        setUserData(prevData => ({
-          ...prevData,
-          id: user.id,
-          email: user.email || '',
-          created_at: user.created_at || new Date().toISOString()
-        }));
+        // Kullanıcı e-postasını kaydet
+        setUserEmail(user.email || '');
         
-        // Kayıt tarihini formatla
-        if (user.created_at) {
-          formatJoinDate(user.created_at);
+        // Kullanıcı adı ve e-posta bilgisini kullan
+        const userEmail = user.email || '';
+        let firstName = 'Kullanıcı';
+        let lastName = '';
+        
+        // E-postadan ad-soyad tahmin et (basit yaklaşım)
+        if (userEmail) {
+          const emailName = userEmail.split('@')[0];
+          const nameParts = emailName
+            .replace(/[0-9]/g, '') // Rakamları kaldır
+            .replace(/[._-]/g, ' ') // Nokta, alt çizgi ve tire işaretlerini boşluğa çevir
+            .trim()
+            .split(' ');
+          
+          if (nameParts.length > 0) {
+            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase();
+            
+            if (nameParts.length > 1) {
+              lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1).toLowerCase();
+            }
+          }
         }
         
-        // User verilerini veritabanından al
+        // Kullanıcı oluşturulma tarihini hesapla
+        const createdAt = user.created_at;
+        const joinDate = createdAt ? formatJoinDate(createdAt) : 'Bilinmiyor';
+        
+        setUserData(prevData => ({
+          ...prevData,
+          firstName,
+          lastName,
+          joinDate
+        }));
+        
+        // Profil tablosundan bilgileri almaya çalış
         fetchUserData(user.id);
       }
     } catch (error) {
-      console.error('Oturum kontrolü sırasında hata:', error);
+      console.error("Oturum kontrolü sırasında hata:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Kayıt tarihini formatlama fonksiyonu
+  // Katılma tarihini formatla
   const formatJoinDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const formattedDate = date.toLocaleDateString('tr-TR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      setJoinDate(formattedDate);
-    } catch (error) {
-      console.error('Tarih formatlanırken hata oluştu:', error);
-      setJoinDate('Bilinmiyor');
-    }
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' };
+    return new Intl.DateTimeFormat('tr-TR', options).format(date);
   };
 
   const fetchUserData = async (userId: string) => {
     try {
-      setLoading(true);
-      
-      // User tablosundan kullanıcı verilerini al
+      // users tablosundan temel bilgileri al
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name, created_at, role, storage_size, avatar_url, bio, location, phone, website')
+        .select('first_name, last_name, phone, avatar_url, bio')
         .eq('id', userId)
         .single();
       
       if (!userError && userData) {
         console.log('Users tablosundan kullanıcı verileri alındı:', userData);
         
-        // Kullanıcı verilerini güncelle
+        // Telefon numarası yok ise, güvenli bir varsayılan değer belirle
+        const phone = userData.phone || '+90 --- --- -- --';
+        
         setUserData(prevData => ({
           ...prevData,
-          first_name: userData.first_name || '',
-          last_name: userData.last_name || '',
-          created_at: userData.created_at || prevData.created_at,
-          role: userData.role || 'user',
-          storage_size: userData.storage_size || 0,
-          avatar_url: userData.avatar_url,
-          bio: userData.bio || '',
-          location: userData.location || '',
-          phone: userData.phone || '',
-          website: userData.website || ''
+          firstName: userData.first_name || prevData.firstName,
+          lastName: userData.last_name || prevData.lastName,
+          phone: phone,
+          bio: userData.bio || prevData.bio,
+          avatarUrl: userData.avatar_url || ''
         }));
+        return;
+      }
+      
+      // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, phone')
+        .eq('id', userId)
+        .single();
+      
+      if (!profileError && profileData) {
+        console.log('Profiles tablosundan kullanıcı verileri alındı:', profileData);
+        const nameParts = profileData.full_name ? profileData.full_name.split(' ') : [];
         
-        // Kayıt tarihini formatla
-        if (userData.created_at) {
-          formatJoinDate(userData.created_at);
-        }
-        
-        // Avatar URL'ini ayarla
-        if (userData.avatar_url) {
-          setAvatarUrl(userData.avatar_url);
-        } else {
-          // Avatar yoksa, isim baş harflerini kullanarak avatar oluştur
-          const name = `${userData.first_name || ''} ${userData.last_name || ''}`.trim();
-          setAvatarUrl(getAvatarUrl(name, userData.email || ''));
-        }
-      } else {
-        // Varsayılan avatar oluştur
-        setAvatarUrl(getAvatarUrl('', userData?.email || ''));
+        setUserData(prevData => ({
+          ...prevData,
+          firstName: nameParts[0] || prevData.firstName,
+          lastName: nameParts.slice(1).join(' ') || prevData.lastName,
+          phone: profileData.phone || prevData.phone,
+          avatarUrl: profileData.avatar_url || prevData.avatarUrl
+        }));
       }
     } catch (error) {
-      console.error('Kullanıcı bilgileri alınırken hata:', error);
-    } finally {
-      setLoading(false);
+      console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
     }
   };
 
-  // Avatar URL oluşturma fonksiyonu
-  const getAvatarUrl = (name: string, email: string) => {
-    if (name && name.trim() !== '') {
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff&size=256`;
-    } else if (email) {
-      // E-posta adresinden kullanıcı adını al
-      const username = email.split('@')[0];
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=0D8ABC&color=fff&size=256`;
+  // Avatar URL'si oluştur
+  const getAvatarUrl = () => {
+    if (userData.avatarUrl) {
+      return userData.avatarUrl;
     }
-    return `https://ui-avatars.com/api/?name=?&background=0D8ABC&color=fff&size=256`;
+    
+    // Kullanıcı adını parametre olarak kullanarak tutarlı bir avatar oluştur
+    const seed = `${userData.firstName}-${userData.lastName}`.toLowerCase() || userEmail;
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=2563eb,4f46e5`;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
         <div className="w-12 h-12 border-4 border-t-blue-500 border-r-blue-400 border-blue-300/30 rounded-full animate-spin"></div>
@@ -194,126 +186,181 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Banner */}
-        <div className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl mb-6 overflow-hidden border border-gray-800/70 backdrop-blur-sm shadow-xl">
-          <div className="h-32 md:h-48 bg-gradient-to-r from-blue-900/30 to-purple-900/30 relative">
-            <div className="absolute left-0 right-0 -bottom-16 md:-bottom-20 flex justify-center">
-              <div className="relative w-32 h-32 md:w-40 md:h-40">
-                <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-md"></div>
-                <div className="relative z-10 w-full h-full rounded-full border-4 border-gray-900 shadow-xl overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
-                  {avatarUrl ? (
-                    <img 
-                      src={avatarUrl} 
-                      alt={userData.first_name || 'Profil'} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : loading ? (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                      <div className="w-10 h-10 border-4 border-t-blue-500 border-r-blue-300 border-blue-100/30 rounded-full animate-spin"></div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold">
-                      {userData.first_name?.charAt(0) || userData.email?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="relative w-full h-48 md:h-64 rounded-t-xl bg-gradient-to-r from-blue-900/40 to-purple-900/40 overflow-hidden mb-16 md:mb-20">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm"></div>
           
-          <div className="pt-20 pb-6 px-4 md:px-8 text-center">
-            <h2 className="text-2xl font-bold mb-1">
-              {userData.first_name} {userData.last_name}
-            </h2>
-            <div className="text-gray-400 mb-4">{userData.email}</div>
-            
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400 max-w-lg mx-auto mb-2">
-              <div className="flex items-center">
-                <CalendarToday fontSize="small" className="mr-1 text-gray-500" />
-                <span>Katılma: {joinDate || 'Yükleniyor...'}</span>
+          <button className="absolute right-4 top-4 p-2 bg-gray-900/50 rounded-full hover:bg-gray-900/70 transition-colors">
+            <Edit />
+          </button>
+          
+          {/* Profile Picture */}
+          <div className="absolute -bottom-14 left-8 md:left-12">
+            <div className="relative">
+              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-gray-900 shadow-xl">
+                {/* Kullanıcının yüklediği avatar görselini kullan */}
+                <img 
+                  src={userData.avatarUrl || getAvatarUrl()}
+                  alt={`${userData.firstName} ${userData.lastName}`}
+                  className="w-full h-full object-cover bg-gray-800"
+                />
               </div>
-              {userData.phone && (
-                <div className="flex items-center">
-                  <Phone fontSize="small" className="mr-1 text-gray-500" />
-                  <span>{userData.phone}</span>
-                </div>
-              )}
-              {userData.location && (
-                <div className="flex items-center">
-                  <LocationOn fontSize="small" className="mr-1 text-gray-500" />
-                  <span>{userData.location}</span>
-                </div>
-              )}
-              {userData.website && (
-                <div className="flex items-center">
-                  <Link fontSize="small" className="mr-1 text-gray-500" />
-                  <a href={userData.website.startsWith('http') ? userData.website : `https://${userData.website}`} 
-                     target="_blank" 
-                     rel="noopener noreferrer"
-                     className="text-blue-400 hover:underline"
-                  >
-                    {userData.website.replace(/^https?:\/\//i, '')}
-                  </a>
-                </div>
-              )}
+              <button 
+                className="absolute right-1 bottom-1 p-2 bg-gray-900/70 rounded-full hover:bg-gray-900 transition-colors border border-gray-700"
+                onClick={() => router.push('/ayarlar')}
+              >
+                <Camera fontSize="small" />
+              </button>
             </div>
-
-            {userData.bio && (
-              <div className="max-w-xl mx-auto mt-4 text-gray-300">
-                {userData.bio}
-              </div>
-            )}
           </div>
         </div>
-        
-        {/* Profil İçeriği */}
-        <div className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 rounded-xl p-6 border border-gray-800/70 backdrop-blur-sm shadow-xl">
-          <h3 className="text-xl font-bold mb-4 flex items-center">
-            <Storage className="mr-2" fontSize="small" /> Hesap Bilgileri
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-              <div className="text-sm text-gray-400 mb-1">Kullanıcı ID</div>
-              <div className="font-mono text-gray-300 text-sm">{userData.id || '-'}</div>
-            </div>
-            
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-              <div className="text-sm text-gray-400 mb-1">Rol</div>
-              <div className="text-gray-300">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium
-                  ${userData.role === 'admin' ? 'bg-purple-900/50 text-purple-300 border border-purple-700/50' : 
-                    userData.role === 'premium' ? 'bg-amber-900/50 text-amber-300 border border-amber-700/50' : 
-                    'bg-blue-900/50 text-blue-300 border border-blue-700/50'}`
-                }>
-                  {userData.role === 'admin' ? 'Yönetici' : 
-                   userData.role === 'premium' ? 'Premium' : 
-                   'Standart Kullanıcı'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-              <div className="text-sm text-gray-400 mb-1">Depolama Alanı</div>
-              <div className="flex flex-col">
-                <div className="text-gray-300 mb-1">
-                  {userData.storage_size ? (
-                    <span>{(userData.storage_size / (1024 * 1024)).toFixed(2)} MB / 100 MB</span>
-                  ) : (
-                    <span>0.00 MB / 100 MB</span>
-                  )}
+
+        {/* Profile Info */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column */}
+          <div className="w-full md:w-1/3">
+            <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg">
+              <div className="p-6">
+                <h2 className="text-2xl font-bold">{userData.firstName} {userData.lastName}</h2>
+                <p className="text-gray-400 mt-1 flex items-center">
+                  <Mail fontSize="small" className="mr-1" /> {userEmail}
+                </p>
+                
+                <div className="mt-4 text-gray-300">
+                  {userData.bio}
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2.5">
-                  <div 
-                    className="bg-gradient-to-r from-blue-600 to-blue-400 h-2.5 rounded-full" 
-                    style={{ width: `${Math.min(100, (userData.storage_size || 0) / (1024 * 1024) / 100 * 100)}%` }}
-                  ></div>
+                
+                <div className="mt-6 space-y-3">
+                  <div className="flex items-start">
+                    <CalendarMonth className="text-gray-400 mr-2 mt-0.5" fontSize="small" />
+                    <div>
+                      <p className="text-sm text-gray-400">Katılma Tarihi</p>
+                      <p>{userData.joinDate}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <Phone className="text-gray-400 mr-2 mt-0.5" fontSize="small" />
+                    <div>
+                      <p className="text-sm text-gray-400">Telefon</p>
+                      <p>{userData.phone}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="flex-1">
+            {/* Activity Section */}
+            <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg mb-6">
+              <div className="p-4 border-b border-gray-800/50 flex justify-between items-center">
+                <h3 className="font-semibold">Son Aktiviteler</h3>
+                <button className="text-blue-400 text-sm hover:text-blue-300">Tümünü Gör</button>
+              </div>
+              
+              <div className="p-4">
+                <div className="space-y-4">
+                  {[1, 2, 3].map((_, index) => (
+                    <div key={index} className="flex p-3 bg-gray-800/30 rounded-lg">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center mr-3">
+                        <Mail className="text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{index === 0 ? 'Yeni e-posta gönderildi' : index === 1 ? 'Profil güncellendi' : 'Yeni klasör oluşturuldu'}</p>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {index === 0 
+                                ? 'recipient@example.com adresine bir e-posta gönderdiniz' 
+                                : index === 1 
+                                  ? 'Profil bilgilerinizi güncellediniz' 
+                                  : '"Proje Belgeleri" klasörü oluşturuldu'}
+                            </p>
+                          </div>
+                          <span className="text-xs text-gray-500">{index === 0 ? '2 saat önce' : index === 1 ? '1 gün önce' : '3 gün önce'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
             
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-              <div className="text-sm text-gray-400 mb-1">Katılma Tarihi</div>
-              <div className="text-gray-300">{joinDate || '-'}</div>
+            {/* Storage Section */}
+            <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg">
+              <div className="p-4 border-b border-gray-800/50">
+                <h3 className="font-semibold">Depolama Kullanımı</h3>
+              </div>
+              
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm">Kullanılan Alan</span>
+                  <span className="text-sm font-medium">10.06 MB / 200 MB</span>
+                </div>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{width: '5%'}}></div>
+                </div>
+                
+                <div className="mt-6">
+                  <div className="flex items-center justify-between py-3 border-b border-gray-800/50">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-md bg-blue-900/30 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                          <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium">Belgeler</p>
+                        <p className="text-sm text-gray-400">24 dosya</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-400">4.2 MB</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-3 border-b border-gray-800/50">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-md bg-green-900/30 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium">Görseller</p>
+                        <p className="text-sm text-gray-400">36 dosya</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-400">3.8 MB</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-3">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-md bg-purple-900/30 flex items-center justify-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                          <polyline points="14 2 14 8 20 8"></polyline>
+                          <path d="M10 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"></path>
+                          <path d="M12 14v4"></path>
+                          <path d="M8 16h8"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium">Diğer</p>
+                        <p className="text-sm text-gray-400">12 dosya</p>
+                      </div>
+                    </div>
+                    <span className="text-gray-400">2.1 MB</span>
+                  </div>
+                </div>
+                
+                <button className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg flex items-center justify-center transition-colors">
+                  <CloudUpload className="mr-2" fontSize="small" />
+                  Dosya Yükle
+                </button>
+              </div>
             </div>
           </div>
         </div>

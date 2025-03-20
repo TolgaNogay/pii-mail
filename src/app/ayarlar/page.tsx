@@ -3,17 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Settings, ArrowBack, Save, Logout, Person, Key, VpnKey, Shield, Notifications, AutoDelete, Email } from '@mui/icons-material';
+import { Settings, ArrowBack, Save, Logout, Person, Key, VpnKey, Shield, Notifications, AutoDelete, Email, AccountCircle, CloudUpload } from '@mui/icons-material';
 
 export default function AyarlarPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [userData, setUserData] = useState({ firstName: '', lastName: '' });
+  const [userData, setUserData] = useState({ 
+    firstName: '',
+    lastName: '',
+    email: '',
+    avatarUrl: '',
+  });
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   
   useEffect(() => {
     checkUser();
@@ -30,7 +38,7 @@ export default function AyarlarPage() {
           window.location.href = '/giris';
         }, 100);
       } else if (user) {
-        // Kullanıcı e-postasını kaydet
+        // Kullanıcının kayıtlı olduğu e-posta adresini belirle
         setUserEmail(user.email || '');
         
         // Kullanıcı adı ve e-posta bilgisini kullan
@@ -58,10 +66,12 @@ export default function AyarlarPage() {
         
         setUserData({
           firstName,
-          lastName
+          lastName,
+          email: user.email || '',
+          avatarUrl: '',
         });
         
-        // Ayrıca profil tablosundan bilgileri de almaya çalış
+        // Kullanıcının bilgilerini al
         fetchUserData(user.id);
       }
     } catch (error) {
@@ -71,39 +81,22 @@ export default function AyarlarPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
-      // Önce user tablosunu kontrol et
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name')
+        .select('*')
         .eq('id', userId)
         .single();
-      
-      if (!userError && userData && userData.first_name) {
-        console.log('Users tablosundan kullanıcı verileri alındı:', userData);
+
+      if (!userError && userData) {
         setUserData({
-          firstName: userData.first_name,
-          lastName: userData.last_name || ''
-        });
-        return;
-      }
-      
-      // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', userId)
-        .single();
-      
-      if (!profileError && profileData && profileData.full_name) {
-        console.log('Profiles tablosundan kullanıcı verileri alındı:', profileData);
-        const nameParts = profileData.full_name.split(' ');
-        setUserData({
-          firstName: nameParts[0] || 'Kullanıcı',
-          lastName: nameParts.slice(1).join(' ') || ''
+          firstName: userData.first_name || '',
+          lastName: userData.last_name || '',
+          email: userData.email || '',
+          avatarUrl: userData.avatar_url || '',
         });
       }
     } catch (error) {
-      console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      console.error('Error fetching user data:', error);
     }
   };
 
@@ -116,14 +109,108 @@ export default function AyarlarPage() {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    setAvatarFile(file);
+    
+    // Görsel önizleme oluştur
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const uploadAvatar = async () => {
+    try {
+      if (!avatarFile) return null;
+      
+      setUploadingAvatar(true);
+      
+      // Kullanıcı ID'sini al
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      // Benzersiz bir dosya adı oluştur
+      const fileExt = avatarFile.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+      
+      // Dosyayı Supabase Storage'a yükle
+      const { error: uploadError } = await supabase.storage
+        .from('user-avatars')
+        .upload(filePath, avatarFile);
+        
+      if (uploadError) {
+        console.error('Avatar yükleme hatası:', uploadError);
+        return null;
+      }
+      
+      // Dosya için genel URL al
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-avatars')
+        .getPublicUrl(filePath);
+        
+      return publicUrl;
+    } catch (error) {
+      console.error('Avatar yükleme sırasında hata oluştu:', error);
+      return null;
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleSaveSettings = async () => {
-    setIsSaving(true);
-    // Ayarları kaydet
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      setIsSaving(true);
+      
+      // Kullanıcı ID'sini al
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Avatar güncellemesi varsa, önce onu yükle
+      let avatarUrl = userData.avatarUrl;
+      if (avatarFile) {
+        const uploadedUrl = await uploadAvatar();
+        if (uploadedUrl) {
+          avatarUrl = uploadedUrl;
+        }
+      }
+      
+      // Kullanıcı bilgilerini güncelle
+      const { error } = await supabase
+        .from('users')
+        .update({
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error('Ayarlar güncellenirken hata oluştu:', error);
+        return;
+      }
+      
+      // userData'yı da güncelle
+      setUserData(prev => ({
+        ...prev,
+        avatarUrl: avatarUrl
+      }));
+      
+      // Başarılı mesajını göster ve bir süre sonra gizle
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    }, 800);
+    } catch (error) {
+      console.error('Ayarlar kaydedilirken hata oluştu:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Sekmeleri tanımla
@@ -168,7 +255,7 @@ export default function AyarlarPage() {
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm"></div>
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-lg font-medium overflow-hidden border border-white/10 relative z-10">
                     <img 
-                      src={`https://i.pravatar.cc/48?u=${userData.firstName}`} 
+                      src={avatarPreview || userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName)}&radius=50&backgroundColor=2563eb`} 
                       alt={userData.firstName} 
                       className="w-full h-full object-cover" 
                     />
@@ -215,7 +302,42 @@ export default function AyarlarPage() {
               <div>
                 <h2 className="text-xl font-semibold mb-4">Profil Bilgileri</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Avatar Upload */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="relative mb-4">
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 shadow-lg">
+                        <img 
+                          src={avatarPreview || userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName)}&radius=50&backgroundColor=2563eb`} 
+                          alt={userData.firstName} 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <label 
+                        htmlFor="avatar-upload" 
+                        className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-500 flex items-center justify-center cursor-pointer transition-colors shadow-lg border border-blue-700"
+                      >
+                        <CloudUpload fontSize="small" />
+                      </label>
+                      <input 
+                        id="avatar-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleAvatarChange}
+                      />
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {!avatarFile && "Profil resmi yüklemek için tıklayın"}
+                      {avatarFile && (
+                        <div className="flex items-center">
+                          <span className="text-green-400 mr-2">✓</span>
+                          {avatarFile.name} ({Math.round(avatarFile.size / 1024)} KB)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-1">Ad</label>
