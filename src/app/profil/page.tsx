@@ -39,29 +39,7 @@ export default function ProfilePage() {
       } else if (user) {
         // Kullanıcı e-postasını kaydet
         setUserEmail(user.email || '');
-        
-        // Kullanıcı adı ve e-posta bilgisini kullan
-        const userEmail = user.email || '';
-        let firstName = 'Kullanıcı';
-        let lastName = '';
-        
-        // E-postadan ad-soyad tahmin et (basit yaklaşım)
-        if (userEmail) {
-          const emailName = userEmail.split('@')[0];
-          const nameParts = emailName
-            .replace(/[0-9]/g, '') // Rakamları kaldır
-            .replace(/[._-]/g, ' ') // Nokta, alt çizgi ve tire işaretlerini boşluğa çevir
-            .trim()
-            .split(' ');
-          
-          if (nameParts.length > 0) {
-            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase();
-            
-            if (nameParts.length > 1) {
-              lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1).toLowerCase();
-            }
-          }
-        }
+        console.log("ProfilePage - Kullanıcı oturumu doğrulandı, e-posta:", user.email);
         
         // Kullanıcı oluşturulma tarihini hesapla
         const createdAt = user.created_at;
@@ -69,8 +47,6 @@ export default function ProfilePage() {
         
         setUserData(prevData => ({
           ...prevData,
-          firstName,
-          lastName,
           joinDate
         }));
         
@@ -78,7 +54,7 @@ export default function ProfilePage() {
         fetchUserData(user.id);
       }
     } catch (error) {
-      console.error("Oturum kontrolü sırasında hata:", error);
+      console.error("ProfilePage - Oturum kontrolü sırasında hata:", error);
     } finally {
       setIsLoading(false);
     }

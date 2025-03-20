@@ -105,41 +105,10 @@ export default function InboxPage() {
       } else if (user) {
         // Kullanıcı e-postasını kaydet
         setUserEmail(user.email || '');
+        console.log("InboxPage - Kullanıcı oturumu doğrulandı, id:", user.id);
         
-        // Kullanıcı adı ve e-posta bilgisini kullan
-        const userEmail = user.email || '';
-        let firstName = 'Kullanıcı';
-        let lastName = '';
-        
-        // E-postadan ad-soyad tahmin et (basit yaklaşım)
-        if (userEmail) {
-          const emailName = userEmail.split('@')[0];
-          const nameParts = emailName
-            .replace(/[0-9]/g, '') // Rakamları kaldır
-            .replace(/[._-]/g, ' ') // Nokta, alt çizgi ve tire işaretlerini boşluğa çevir
-            .trim()
-            .split(' ');
-          
-          if (nameParts.length > 0) {
-            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase();
-            
-            if (nameParts.length > 1) {
-              lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1).toLowerCase();
-            }
-          }
-        }
-        
-        setUserData({
-          firstName,
-          lastName,
-          avatarUrl: ''
-        });
-        
-        // Ayrıca profil tablosundan bilgileri de almaya çalış
+        // Kullanıcı bilgilerini al ve e-postaları yükle
         fetchUserData(user.id);
-        
-        // E-postaları yükle
-        fetchEmails();
       }
     } catch (error) {
       console.error("Oturum kontrolü sırasında hata:", error);
@@ -148,7 +117,7 @@ export default function InboxPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
-      console.log("fetchUserData çağrıldı, userId:", userId);
+      console.log("InboxPage - fetchUserData çağrıldı, userId:", userId);
       
       // Kullanıcı verilerini al
       const { data, error } = await supabase
@@ -158,7 +127,7 @@ export default function InboxPage() {
         .single();
         
       if (error) {
-        console.error('Kullanıcı bilgileri alınırken hata oluştu:', error);
+        console.error('InboxPage - Users tablosundan kullanıcı bilgileri alınırken hata:', error);
         
         // users tablosundan veri alınamazsa profiles tablosunu deneyelim
         const { data: profileData, error: profileError } = await supabase
@@ -168,7 +137,10 @@ export default function InboxPage() {
           .single();
           
         if (profileError) {
-          console.error('Profil bilgileri alınırken de hata oluştu:', profileError);
+          console.error('InboxPage - Profiles tablosundan da kullanıcı bilgileri alınamadı:', profileError);
+          
+          // Yine de e-postaları yükle
+          fetchEmails();
           return;
         }
         
@@ -183,13 +155,16 @@ export default function InboxPage() {
             lastName = nameParts.slice(1).join(' ');
           }
           
+          console.log('InboxPage - Profiles tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
+          
           setUserData({
             firstName,
             lastName,
             avatarUrl: profileData.avatar_url || ''
           });
           
-          console.log("Profiles tablosundan veriler alındı:", { firstName, lastName });
+          // E-postaları yükle
+          fetchEmails();
         }
         
         return;
@@ -199,19 +174,24 @@ export default function InboxPage() {
         const firstName = data.first_name || 'Kullanıcı';
         const lastName = data.last_name || '';
         
+        console.log('InboxPage - Users tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
+        
         setUserData({
           firstName,
           lastName,
           avatarUrl: data.avatar_url || ''
         });
         
-        console.log("Users tablosundan veriler alındı:", { firstName, lastName });
-        
-        // Verileri aldıktan sonra e-postaları yükle
+        // E-postaları yükle
+        fetchEmails();
+      } else {
+        console.log('InboxPage - Users tablosunda veri bulunamadı');
         fetchEmails();
       }
     } catch (error) {
-      console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      console.error('InboxPage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      // Hata durumunda da e-postaları yüklemeyi dene
+      fetchEmails();
     }
   };
 
