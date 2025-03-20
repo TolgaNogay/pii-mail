@@ -42,6 +42,18 @@ interface Email {
   avatar?: string;
 }
 
+// User interface for new database schema
+interface User {
+  id: string;
+  email: string;
+  created_at: string;
+  role: string;
+  storage_size: number;
+  avatar_url?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
 interface Folder {
   id: string;
   name: string;
@@ -58,9 +70,18 @@ export default function InboxPage() {
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState('inbox');
-  const [userData, setUserData] = useState({ firstName: '', lastName: '' });
+  const [userData, setUserData] = useState<User>({ 
+    id: '',
+    email: '',
+    created_at: '',
+    role: 'user',
+    storage_size: 0,
+    first_name: '',
+    last_name: ''
+  });
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const userButtonRef = useRef<HTMLDivElement>(null);
 
@@ -102,35 +123,15 @@ export default function InboxPage() {
         // Kullanıcı e-postasını kaydet
         setUserEmail(user.email || '');
         
-        // Kullanıcı adı ve e-posta bilgisini kullan
-        const userEmail = user.email || '';
-        let firstName = 'Kullanıcı';
-        let lastName = '';
+        // Kullanıcı verisini alırken başlangıç değerleri ata
+        setUserData(prevData => ({
+          ...prevData,
+          id: user.id,
+          email: user.email || '',
+          created_at: user.created_at || new Date().toISOString()
+        }));
         
-        // E-postadan ad-soyad tahmin et (basit yaklaşım)
-        if (userEmail) {
-          const emailName = userEmail.split('@')[0];
-          const nameParts = emailName
-            .replace(/[0-9]/g, '') // Rakamları kaldır
-            .replace(/[._-]/g, ' ') // Nokta, alt çizgi ve tire işaretlerini boşluğa çevir
-            .trim()
-            .split(' ');
-          
-          if (nameParts.length > 0) {
-            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase();
-            
-            if (nameParts.length > 1) {
-              lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1).toLowerCase();
-            }
-          }
-        }
-        
-        setUserData({
-          firstName,
-          lastName
-        });
-        
-        // Ayrıca profil tablosundan bilgileri de almaya çalış
+        // Kullanıcı verilerini veritabanından al
         fetchUserData(user.id);
         
         // E-postaları getir
@@ -143,37 +144,39 @@ export default function InboxPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
-      // Önce user tablosunu kontrol et
+      // User tablosundan kullanıcı bilgilerini al
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('first_name, last_name')
+        .select('first_name, last_name, created_at, role, storage_size, avatar_url')
         .eq('id', userId)
         .single();
       
-      if (!userError && userData && userData.first_name) {
+      if (!userError && userData) {
         console.log('Users tablosundan kullanıcı verileri alındı:', userData);
-        setUserData({
-          firstName: userData.first_name,
-          lastName: userData.last_name || ''
-        });
+        
+        // Avatar URL'ini ayarla
+        if (userData.avatar_url) {
+          setAvatarUrl(userData.avatar_url);
+        } else {
+          // Kullanıcının avatarı yoksa, Gravatar veya bir avatar servisinden al
+          setAvatarUrl(`https://ui-avatars.com/api/?name=${userData.first_name || ''} ${userData.last_name || ''}&background=0D8ABC&color=fff`);
+        }
+        
+        // Kullanıcı verilerini ayarla
+        setUserData(prevData => ({
+          ...prevData,
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          created_at: userData.created_at || prevData.created_at,
+          role: userData.role || 'user',
+          storage_size: userData.storage_size || 0,
+          avatar_url: userData.avatar_url
+        }));
         return;
       }
       
-      // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', userId)
-        .single();
-      
-      if (!profileError && profileData && profileData.full_name) {
-        console.log('Profiles tablosundan kullanıcı verileri alındı:', profileData);
-        const nameParts = profileData.full_name.split(' ');
-        setUserData({
-          firstName: nameParts[0] || 'Kullanıcı',
-          lastName: nameParts.slice(1).join(' ') || ''
-        });
-      }
+      // Eğer user tablosunda bilgi bulunamazsa, varsayılan avatar oluştur
+      setAvatarUrl(`https://ui-avatars.com/api/?name=${userEmail.split('@')[0]}&background=0D8ABC&color=fff`);
     } catch (error) {
       console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
     }
@@ -390,20 +393,86 @@ export default function InboxPage() {
                 onClick={toggleUserMenu}
               >
                 <div className="flex flex-col mr-2">
-                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.firstName || 'Tolga'}</span>
+                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.first_name || userEmail.split('@')[0]}</span>
                   <span className="text-xs text-gray-400 truncate">{userEmail}</span>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm group-hover:bg-blue-500/30 transition-colors"></div>
                   <span className="w-7 h-7 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium shadow-lg overflow-hidden border border-white/10 relative z-10">
-                    <img 
-                      src={`https://i.pravatar.cc/28?u=${userData.firstName || 'Tolga'}`} 
-                      alt="User" 
-                      className="w-full h-full object-cover" 
-                    />
+                    {avatarUrl ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt="User" 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      userData.first_name?.charAt(0) || userEmail.charAt(0).toUpperCase()
+                    )}
                   </span>
                 </div>
               </div>
+              
+              {showUserMenu && (
+                <div 
+                  className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50 animate-fadeIn"
+                  style={{ 
+                    top: menuPosition.top,
+                    right: menuPosition.right,
+                  }}
+                >
+                  <div className="p-3 border-b border-gray-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border border-white/10">
+                        {avatarUrl ? (
+                          <img 
+                            src={avatarUrl} 
+                            alt="User" 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <span className="text-white text-sm font-medium">
+                            {userData.first_name?.charAt(0) || userEmail.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium">{userData.first_name} {userData.last_name}</div>
+                        <div className="text-sm text-gray-400 truncate">{userEmail}</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">
+                      <div>Kayıt Tarihi: {new Date(userData.created_at).toLocaleDateString('tr-TR')}</div>
+                      <div>Rol: {userData.role}</div>
+                      <div>Depolama: {(userData.storage_size / (1024 * 1024)).toFixed(2)} MB</div>
+                    </div>
+                  </div>
+                  <a href="/profil" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Profil
+                  </a>
+                  <a href="/ayarlar" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Ayarlar
+                  </a>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center px-4 py-2.5 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Çıkış Yap
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -684,68 +753,6 @@ export default function InboxPage() {
           )}
         </div>
       </div>
-
-      {/* Portal for dropdown menu */}
-      {showUserMenu && (
-        <div 
-          className="fixed top-0 left-0 w-full h-full z-[9999] pointer-events-none"
-          onClick={() => setShowUserMenu(false)}
-        >
-          <div 
-            className="absolute py-2 bg-gray-800/95 backdrop-blur-md border border-gray-700 rounded-lg shadow-xl animate-fadeIn pointer-events-auto"
-            style={{ 
-              top: `${menuPosition.top}px`, 
-              right: `${menuPosition.right}px`,
-              width: '240px'
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center px-4 py-3 border-b border-gray-700">
-              <div className="mr-3 flex-shrink-0">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium shadow-md overflow-hidden border border-white/10">
-                  <img 
-                    src={`https://i.pravatar.cc/36?u=${userData.firstName || 'Tolga'}`} 
-                    alt="User" 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{userData.firstName || 'Tolga'} {userData.lastName}</p>
-                <p className="text-xs text-gray-400 truncate">{userEmail}</p>
-              </div>
-            </div>
-            
-            <a href="/profil" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              Profil
-            </a>
-            
-            <a href="/ayarlar" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-              Ayarlar
-            </a>
-            
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-4 py-2.5 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-              Çıkış Yap
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
