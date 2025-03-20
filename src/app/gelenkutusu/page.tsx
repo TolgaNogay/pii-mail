@@ -609,11 +609,17 @@ export default function InboxPage() {
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center">
                           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden mr-2">
-                            <img 
-                              src={userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}`}
-                              alt={userData.firstName || 'Kullanıcı'} 
-                              className="w-full h-full object-cover"
-                            />
+                            {email.avatar ? (
+                              <div className="w-full h-full flex items-center justify-center font-medium">
+                                {email.avatar}
+                              </div>
+                            ) : (
+                              <img 
+                                src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(email.from)}`}
+                                alt={email.from} 
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                           </div>
                           <span className="truncate font-medium text-white">{email.from}</span>
                         </div>
@@ -669,11 +675,17 @@ export default function InboxPage() {
                   <div className="relative flex-shrink-0">
                     <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-20"></div>
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-medium mr-3 flex-shrink-0 relative z-10 border border-blue-300/20">
-                      <img 
-                        src={userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}`}
-                        alt={userData.firstName || 'Kullanıcı'} 
-                        className="w-full h-full object-cover"
-                      />
+                      {selectedEmail.avatar ? (
+                        <div className="w-full h-full flex items-center justify-center font-medium">
+                          {selectedEmail.avatar}
+                        </div>
+                      ) : (
+                        <img 
+                          src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(selectedEmail.from)}`}
+                          alt={selectedEmail.from} 
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 ml-3">
@@ -759,14 +771,14 @@ export default function InboxPage() {
               <div className="mr-3 flex-shrink-0">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium shadow-md overflow-hidden border border-white/10">
                   <img 
-                    src={`https://i.pravatar.cc/36?u=${userData.firstName || 'Tolga'}`} 
-                    alt="User" 
+                    src={userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}`} 
+                    alt={userData.firstName || 'Kullanıcı'} 
                     className="w-full h-full object-cover" 
                   />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{userData.firstName || 'Tolga'} {userData.lastName}</p>
+                <p className="text-sm font-medium text-white truncate">{userData.firstName || 'Kullanıcı'} {userData.lastName}</p>
                 <p className="text-xs text-gray-400 truncate">{userEmail}</p>
               </div>
             </div>
