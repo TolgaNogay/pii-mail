@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Person, ArrowBack, Settings, Edit, Camera, Mail, Phone, CalendarMonth, CloudUpload } from '@mui/icons-material';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -143,18 +144,12 @@ export default function ProfilePage() {
     }
   };
 
-  // Avatar URL'si oluştur
-  const getAvatarUrl = () => {
-    // Kullanıcının yüklediği bir avatar varsa onu kullan
-    if (userData.avatarUrl && userData.avatarUrl.trim() !== '') {
-      console.log('ProfilePage - Kullanıcının yüklediği avatar kullanılıyor:', userData.avatarUrl);
+  // Kullanıcı avatarını almak için fonksiyon
+  const getUserAvatar = () => {
+    if (userData.avatarUrl) {
       return userData.avatarUrl;
     }
-    
-    // Kullanıcı adını parametre olarak kullanarak tutarlı bir avatar oluştur
-    const seed = `${userData.firstName || 'user'}-${userData.lastName || ''}`.toLowerCase() || userEmail || 'default';
-    console.log('ProfilePage - Dicebear avatar oluşturuldu, seed:', seed);
-    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=2563eb,4f46e5`;
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || userEmail || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`;
   };
 
   if (isLoading) {
@@ -169,52 +164,49 @@ export default function ProfilePage() {
     <div className="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white font-[family-name:var(--font-geist-sans)]">
       <div className="max-w-6xl mx-auto p-4">
         {/* Header */}
-        <div className="flex items-center mb-6">
-          <button 
-            className="p-2 mr-3 bg-gray-800/50 hover:bg-gray-800/80 rounded-full transition-colors"
-            onClick={() => router.push('/gelenkutusu')}
-          >
-            <ArrowBack />
-          </button>
-          <h1 className="text-2xl font-bold flex items-center">
-            <Person className="mr-2" fontSize="large" /> Profil
-          </h1>
-          <div className="ml-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
             <button 
-              className="px-4 py-2 rounded-lg flex items-center bg-gray-800/50 hover:bg-gray-800/80 transition-colors"
-              onClick={() => router.push('/ayarlar')}
+              className="p-2 mr-3 bg-gray-800/50 hover:bg-gray-800/80 rounded-full transition-colors"
+              onClick={() => router.push('/gelenkutusu')}
             >
+              <ArrowBack />
+            </button>
+            <h1 className="text-2xl font-bold flex items-center">
+              <Person className="mr-2" fontSize="large" /> Profil
+            </h1>
+          </div>
+          <div>
+            <Link href="/ayarlar" className="px-4 py-2 bg-gray-800/60 hover:bg-gray-800/80 rounded-lg flex items-center text-gray-300 hover:text-white transition-colors border border-gray-700/60">
               <Settings className="mr-2" fontSize="small" />
               Ayarlar
-            </button>
+            </Link>
           </div>
         </div>
 
-        {/* Profile Banner */}
-        <div className="relative w-full h-48 md:h-64 rounded-t-xl bg-gradient-to-r from-blue-900/40 to-purple-900/40 overflow-hidden mb-16 md:mb-20">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm"></div>
+        {/* Profile Section */}
+        <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden mb-20 md:mb-24 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-gray-800/70 shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/50 to-gray-900/95 z-10"></div>
           
-          <button className="absolute right-4 top-4 p-2 bg-gray-900/50 rounded-full hover:bg-gray-900/70 transition-colors">
-            <Edit />
-          </button>
-          
-          {/* Profile Picture */}
-          <div className="absolute -bottom-14 left-8 md:left-12">
+          {/* Profile image overlay */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20" style={{ transform: 'translateY(50%)' }}>
             <div className="relative">
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-gray-900 shadow-xl">
-                {/* Kullanıcının yüklediği avatar görselini kullan */}
+              <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
+              <div className="w-36 h-36 rounded-full border-4 border-gray-900 bg-gradient-to-br from-blue-500 to-blue-700 shadow-xl shadow-blue-900/30 overflow-hidden relative z-10">
                 <img 
-                  src={userData.avatarUrl || getAvatarUrl()}
-                  alt={`${userData.firstName} ${userData.lastName}`}
-                  className="w-full h-full object-cover bg-gray-800"
+                  src={getUserAvatar()}
+                  alt={userData.firstName || 'Kullanıcı'} 
+                  className="w-full h-full object-cover" 
                 />
+                <button 
+                  className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => router.push('/ayarlar')}
+                >
+                  <div className="p-2 bg-gray-900/80 rounded-full">
+                    <Camera fontSize="small" />
+                  </div>
+                </button>
               </div>
-              <button 
-                className="absolute right-1 bottom-1 p-2 bg-gray-900/70 rounded-full hover:bg-gray-900 transition-colors border border-gray-700"
-                onClick={() => router.push('/ayarlar')}
-              >
-                <Camera fontSize="small" />
-              </button>
             </div>
           </div>
         </div>

@@ -322,6 +322,17 @@ export default function AyarlarPage() {
     }
   };
 
+  // Kullanıcı avatarını almak için fonksiyon
+  const getUserAvatar = () => {
+    if (avatarPreview) {
+      return avatarPreview;
+    }
+    if (userData.avatarUrl) {
+      return userData.avatarUrl;
+    }
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || userEmail || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`;
+  };
+
   // Sekmeleri tanımla
   const tabs = [
     { id: 'profile', label: 'Profil', icon: <Person /> },
@@ -369,7 +380,7 @@ export default function AyarlarPage() {
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm"></div>
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-lg font-medium overflow-hidden border border-white/10 relative z-10">
                     <img 
-                      src={avatarPreview || userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName)}&radius=50&backgroundColor=2563eb`} 
+                      src={getUserAvatar()} 
                       alt={userData.firstName} 
                       className="w-full h-full object-cover" 
                     />

@@ -400,6 +400,14 @@ export default function InboxPage() {
     }
   };
 
+  // Kullanıcı avatarını almak için ortak fonksiyon
+  const getUserAvatar = (userData: { firstName: string, lastName: string, avatarUrl: string }) => {
+    if (userData.avatarUrl) {
+      return userData.avatarUrl;
+    }
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`;
+  };
+
   return (
     <div className="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen flex flex-col text-white font-[family-name:var(--font-geist-sans)]">
       <div className="flex flex-col h-screen overflow-hidden">
@@ -450,19 +458,11 @@ export default function InboxPage() {
                 <div className="relative">
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm group-hover:bg-blue-500/30 transition-colors"></div>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden">
-                    {userData.avatarUrl ? (
-                      <img 
-                        src={userData.avatarUrl}
-                        alt={userData.firstName || 'Kullanıcı'} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <img 
-                        src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`}
-                        alt={userData.firstName || 'Kullanıcı'} 
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                    <img 
+                      src={getUserAvatar(userData)}
+                      alt={userData.firstName || 'Kullanıcı'} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
               </div>
@@ -690,17 +690,11 @@ export default function InboxPage() {
                   <div className="relative flex-shrink-0">
                     <div className="absolute inset-0 bg-blue-500 rounded-full blur-md opacity-20"></div>
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-medium mr-3 flex-shrink-0 relative z-10 border border-blue-300/20">
-                      {selectedEmail.avatar ? (
-                        <div className="w-full h-full flex items-center justify-center font-medium">
-                          {selectedEmail.avatar}
-                        </div>
-                      ) : (
-                        <img 
-                          src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(selectedEmail.from)}`}
-                          alt={selectedEmail.from} 
-                          className="w-full h-full object-cover"
-                        />
-                      )}
+                      <img 
+                        src={selectedEmail.avatar ? selectedEmail.avatar : getUserAvatar(userData)}
+                        alt={selectedEmail.from} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 ml-3">
@@ -786,7 +780,7 @@ export default function InboxPage() {
               <div className="mr-3 flex-shrink-0">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium shadow-md overflow-hidden border border-white/10">
                   <img 
-                    src={userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}`} 
+                    src={getUserAvatar(userData)}
                     alt={userData.firstName || 'Kullanıcı'} 
                     className="w-full h-full object-cover" 
                   />
