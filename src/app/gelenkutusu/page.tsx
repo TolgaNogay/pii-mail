@@ -429,17 +429,25 @@ export default function InboxPage() {
                 onClick={toggleUserMenu}
               >
                 <div className="flex flex-col mr-2">
-                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.firstName || 'Tolga'}</span>
+                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.firstName || 'Kullanıcı'}</span>
                   <span className="text-xs text-gray-400 truncate">{userEmail}</span>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-sm group-hover:bg-blue-500/30 transition-colors"></div>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={userData.avatarUrl || `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}`}
-                      alt={userData.firstName || 'Kullanıcı'} 
-                      className="w-full h-full object-cover"
-                    />
+                    {userData.avatarUrl ? (
+                      <img 
+                        src={userData.avatarUrl}
+                        alt={userData.firstName || 'Kullanıcı'} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img 
+                        src={`https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`}
+                        alt={userData.firstName || 'Kullanıcı'} 
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                 </div>
               </div>
