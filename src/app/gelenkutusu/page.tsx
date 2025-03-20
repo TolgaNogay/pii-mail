@@ -107,7 +107,7 @@ export default function InboxPage() {
         setUserEmail(user.email || '');
         console.log("InboxPage - Kullanıcı oturumu doğrulandı, id:", user.id);
         
-        // Kullanıcı bilgilerini al ve e-postaları yükle
+        // Supabase'den kullanıcı verilerini çek
         fetchUserData(user.id);
       }
     } catch (error) {
@@ -119,77 +119,92 @@ export default function InboxPage() {
     try {
       console.log("InboxPage - fetchUserData çağrıldı, userId:", userId);
       
-      // Kullanıcı verilerini al
-      const { data, error } = await supabase
+      // RLS (Row Level Security) kuralları hatalarından kaçınmak için, 
+      // hem users hem de profiles tablolarını aynı anda sorgulamayı deneyelim
+      const userPromise = supabase
         .from('users')
         .select('first_name, last_name, avatar_url')
         .eq('id', userId)
         .single();
-        
-      if (error) {
-        console.error('InboxPage - Users tablosundan kullanıcı bilgileri alınırken hata:', error);
-        
-        // users tablosundan veri alınamazsa profiles tablosunu deneyelim
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', userId)
-          .single();
-          
-        if (profileError) {
-          console.error('InboxPage - Profiles tablosundan da kullanıcı bilgileri alınamadı:', profileError);
-          
-          // Yine de e-postaları yükle
-          fetchEmails();
-          return;
-        }
-        
-        if (profileData) {
-          // Full name'i parçalara ayır
-          let firstName = 'Kullanıcı';
-          let lastName = '';
-          
-          if (profileData.full_name) {
-            const nameParts = profileData.full_name.split(' ');
-            firstName = nameParts[0] || firstName;
-            lastName = nameParts.slice(1).join(' ');
-          }
-          
-          console.log('InboxPage - Profiles tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
-          
-          setUserData({
-            firstName,
-            lastName,
-            avatarUrl: profileData.avatar_url || ''
-          });
-          
-          // E-postaları yükle
-          fetchEmails();
-        }
-        
-        return;
-      }
       
-      if (data) {
-        const firstName = data.first_name || 'Kullanıcı';
-        const lastName = data.last_name || '';
+      const profilePromise = supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      // Her iki sorguyu da paralel olarak çalıştır
+      const [userResult, profileResult] = await Promise.all([userPromise, profilePromise]);
+      
+      // Önce users tablosundan veri kullanmayı dene
+      if (!userResult.error && userResult.data) {
+        const firstName = userResult.data.first_name || 'Kullanıcı';
+        const lastName = userResult.data.last_name || '';
         
         console.log('InboxPage - Users tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
         
         setUserData({
           firstName,
           lastName,
-          avatarUrl: data.avatar_url || ''
+          avatarUrl: userResult.data.avatar_url || ''
         });
+      } 
+      // Users tablosundan veri alınamazsa, profiles tablosundan dene
+      else if (!profileResult.error && profileResult.data) {
+        let firstName = 'Kullanıcı';
+        let lastName = '';
         
-        // E-postaları yükle
-        fetchEmails();
-      } else {
-        console.log('InboxPage - Users tablosunda veri bulunamadı');
-        fetchEmails();
+        if (profileResult.data.full_name) {
+          const nameParts = profileResult.data.full_name.split(' ');
+          firstName = nameParts[0] || firstName;
+          lastName = nameParts.slice(1).join(' ');
+        }
+        
+        console.log('InboxPage - Profiles tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
+        
+        setUserData({
+          firstName,
+          lastName,
+          avatarUrl: profileResult.data.avatar_url || ''
+        });
       }
-    } catch (error) {
-      console.error('InboxPage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      // Her iki tablodan da veri alınamazsa
+      else {
+        if (userResult.error) {
+          console.error('InboxPage - Users tablosundan kullanıcı bilgileri alınırken hata:', userResult.error.message);
+        }
+        
+        if (profileResult.error) {
+          console.error('InboxPage - Profiles tablosundan kullanıcı bilgileri alınırken hata:', profileResult.error.message);
+        }
+        
+        console.log('InboxPage - Herhangi bir kullanıcı verisi alınamadı, varsayılan değerler kullanılacak');
+        
+        // Auth verilerini kullanarak en azından bir ad oluşturmaya çalış
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          const emailName = user.email.split('@')[0];
+          const formattedName = emailName
+            .replace(/[0-9]/g, '')
+            .replace(/[._-]/g, ' ')
+            .trim()
+            .split(' ')[0] || 'Kullanıcı';
+          
+          const firstName = formattedName.charAt(0).toUpperCase() + formattedName.slice(1).toLowerCase();
+          
+          setUserData(prev => ({
+            ...prev,
+            firstName,
+            lastName: ''
+          }));
+        }
+      }
+      
+      // Her durumda e-postaları yükle
+      fetchEmails();
+      
+    } catch (error: any) {
+      console.error(`InboxPage - Kullanıcı bilgileri alınırken beklenmeyen hata: ${error.message || error}`);
       // Hata durumunda da e-postaları yüklemeyi dene
       fetchEmails();
     }
