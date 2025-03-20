@@ -93,6 +93,8 @@ export default function ProfilePage() {
 
   const fetchUserData = async (userId: string) => {
     try {
+      console.log("ProfilePage - fetchUserData çağrıldı, userId:", userId);
+      
       // users tablosundan temel bilgileri al
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -101,20 +103,32 @@ export default function ProfilePage() {
         .single();
       
       if (!userError && userData) {
-        console.log('Users tablosundan kullanıcı verileri alındı:', userData);
+        console.log('ProfilePage - Users tablosundan kullanıcı verileri alındı:', userData);
         
         // Telefon numarası yok ise, güvenli bir varsayılan değer belirle
         const phone = userData.phone || '+90 --- --- -- --';
+        const firstName = userData.first_name || '';
+        const lastName = userData.last_name || '';
+        
+        console.log('ProfilePage - Güncellenecek kullanıcı bilgileri:', { 
+          firstName, 
+          lastName, 
+          phone,
+          bio: userData.bio || '',
+          avatarUrl: userData.avatar_url || ''
+        });
         
         setUserData(prevData => ({
           ...prevData,
-          firstName: userData.first_name || prevData.firstName,
-          lastName: userData.last_name || prevData.lastName,
+          firstName: firstName,
+          lastName: lastName,
           phone: phone,
           bio: userData.bio || prevData.bio,
           avatarUrl: userData.avatar_url || ''
         }));
         return;
+      } else {
+        console.log('ProfilePage - Users tablosunda kullanıcı verileri bulunamadı, hata:', userError);
       }
       
       // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
@@ -125,30 +139,45 @@ export default function ProfilePage() {
         .single();
       
       if (!profileError && profileData) {
-        console.log('Profiles tablosundan kullanıcı verileri alındı:', profileData);
-        const nameParts = profileData.full_name ? profileData.full_name.split(' ') : [];
+        console.log('ProfilePage - Profiles tablosundan kullanıcı verileri alındı:', profileData);
+        
+        let firstName = '';
+        let lastName = '';
+        
+        if (profileData.full_name) {
+          const nameParts = profileData.full_name.split(' ');
+          firstName = nameParts[0] || '';
+          lastName = nameParts.slice(1).join(' ') || '';
+        }
+        
+        console.log('ProfilePage - Profiles verilerinden ayrıştırılan ad-soyad:', { firstName, lastName });
         
         setUserData(prevData => ({
           ...prevData,
-          firstName: nameParts[0] || prevData.firstName,
-          lastName: nameParts.slice(1).join(' ') || prevData.lastName,
+          firstName: firstName || prevData.firstName,
+          lastName: lastName || prevData.lastName,
           phone: profileData.phone || prevData.phone,
           avatarUrl: profileData.avatar_url || prevData.avatarUrl
         }));
+      } else {
+        console.log('ProfilePage - Profiles tablosunda da kullanıcı verileri bulunamadı, hata:', profileError);
       }
     } catch (error) {
-      console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      console.error('ProfilePage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
     }
   };
 
   // Avatar URL'si oluştur
   const getAvatarUrl = () => {
-    if (userData.avatarUrl) {
+    // Kullanıcının yüklediği bir avatar varsa onu kullan
+    if (userData.avatarUrl && userData.avatarUrl.trim() !== '') {
+      console.log('ProfilePage - Kullanıcının yüklediği avatar kullanılıyor:', userData.avatarUrl);
       return userData.avatarUrl;
     }
     
     // Kullanıcı adını parametre olarak kullanarak tutarlı bir avatar oluştur
-    const seed = `${userData.firstName}-${userData.lastName}`.toLowerCase() || userEmail;
+    const seed = `${userData.firstName || 'user'}-${userData.lastName || ''}`.toLowerCase() || userEmail || 'default';
+    console.log('ProfilePage - Dicebear avatar oluşturuldu, seed:', seed);
     return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(seed)}&radius=50&backgroundColor=2563eb,4f46e5`;
   };
 

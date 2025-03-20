@@ -137,6 +137,9 @@ export default function InboxPage() {
         
         // Ayrıca profil tablosundan bilgileri de almaya çalış
         fetchUserData(user.id);
+        
+        // E-postaları yükle
+        fetchEmails();
       }
     } catch (error) {
       console.error("Oturum kontrolü sırasında hata:", error);
@@ -145,6 +148,8 @@ export default function InboxPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
+      console.log("fetchUserData çağrıldı, userId:", userId);
+      
       // Kullanıcı verilerini al
       const { data, error } = await supabase
         .from('users')
@@ -154,15 +159,56 @@ export default function InboxPage() {
         
       if (error) {
         console.error('Kullanıcı bilgileri alınırken hata oluştu:', error);
+        
+        // users tablosundan veri alınamazsa profiles tablosunu deneyelim
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', userId)
+          .single();
+          
+        if (profileError) {
+          console.error('Profil bilgileri alınırken de hata oluştu:', profileError);
+          return;
+        }
+        
+        if (profileData) {
+          // Full name'i parçalara ayır
+          let firstName = 'Kullanıcı';
+          let lastName = '';
+          
+          if (profileData.full_name) {
+            const nameParts = profileData.full_name.split(' ');
+            firstName = nameParts[0] || firstName;
+            lastName = nameParts.slice(1).join(' ');
+          }
+          
+          setUserData({
+            firstName,
+            lastName,
+            avatarUrl: profileData.avatar_url || ''
+          });
+          
+          console.log("Profiles tablosundan veriler alındı:", { firstName, lastName });
+        }
+        
         return;
       }
       
       if (data) {
+        const firstName = data.first_name || 'Kullanıcı';
+        const lastName = data.last_name || '';
+        
         setUserData({
-          firstName: data.first_name || 'Kullanıcı',
-          lastName: data.last_name || '',
+          firstName,
+          lastName,
           avatarUrl: data.avatar_url || ''
         });
+        
+        console.log("Users tablosundan veriler alındı:", { firstName, lastName });
+        
+        // Verileri aldıktan sonra e-postaları yükle
+        fetchEmails();
       }
     } catch (error) {
       console.error('Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
@@ -340,15 +386,13 @@ export default function InboxPage() {
     const emails = data.map((item) => ({
       id: item.id,
       from: item.from_name || 'Gönderen',
-      fromEmail: item.from_email || 'email@example.com',
-      to: item.to_email || 'Alıcı',
       subject: item.subject || 'Konu yok',
-      content: item.content || 'İçerik yok',
+      preview: item.content || 'İçerik yok',
       date: formatDate(item.created_at), 
-      read: item.read || false,
-      starred: item.starred || false,
-      attachments: item.attachments || false,
-      folder: 'inbox',
+      isRead: item.read || false,
+      isStarred: item.starred || false,
+      hasAttachments: item.attachments || false,
+      labels: item.labels || [],
       avatar: ''
     })).sort((a, b) => {
       return new Date(b.date).getTime() - new Date(a.date).getTime();

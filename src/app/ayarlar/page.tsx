@@ -81,6 +81,9 @@ export default function AyarlarPage() {
 
   const fetchUserData = async (userId: string) => {
     try {
+      console.log("AyarlarPage - fetchUserData çağrıldı, userId:", userId);
+      
+      // Kullanıcı verilerini al
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -88,15 +91,53 @@ export default function AyarlarPage() {
         .single();
 
       if (!userError && userData) {
+        console.log('AyarlarPage - users tablosundan kullanıcı verileri alındı:', userData);
+        
+        // Verileri ayarla
         setUserData({
           firstName: userData.first_name || '',
           lastName: userData.last_name || '',
           email: userData.email || '',
           avatarUrl: userData.avatar_url || '',
         });
+        
+        return;
+      } else {
+        console.log('AyarlarPage - users tablosundan veri alınamadı, profiles tablosu deneniyor');
+        
+        // Eğer users tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', userId)
+          .single();
+          
+        if (!profileError && profileData) {
+          console.log('AyarlarPage - profiles tablosundan kullanıcı verileri alındı:', profileData);
+          
+          // Ad ve soyadı ayıkla
+          let firstName = '';
+          let lastName = '';
+          
+          if (profileData.full_name) {
+            const nameParts = profileData.full_name.split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+          
+          // Verileri ayarla
+          setUserData({
+            firstName: firstName,
+            lastName: lastName,
+            email: userEmail, // E-posta bilgisini auth verisinden al
+            avatarUrl: profileData.avatar_url || '',
+          });
+        } else {
+          console.log('AyarlarPage - profiles tablosundan da veri alınamadı, hata:', profileError);
+        }
       }
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('AyarlarPage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
     }
   };
 
