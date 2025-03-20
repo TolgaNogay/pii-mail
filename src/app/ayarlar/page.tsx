@@ -206,12 +206,16 @@ export default function AyarlarPage() {
   };
 
   const handleSaveSettings = async () => {
+    let hasError = false;
     try {
       setIsSaving(true);
       
       // Kullanıcı ID'sini al
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.error('AyarlarPage - Kullanıcı bilgisi alınamadı');
+        return;
+      }
       
       console.log('AyarlarPage - Ayarları kaydetmeye başlıyorum:', {
         firstName: userData.firstName,
@@ -252,7 +256,7 @@ export default function AyarlarPage() {
           
         if (insertError) {
           console.error('AyarlarPage - Yeni kullanıcı kaydı oluşturulurken hata:', insertError);
-          return;
+          hasError = true;
         }
       } else {
         // Kullanıcı var ise, güncelle
@@ -270,7 +274,7 @@ export default function AyarlarPage() {
           
         if (updateError) {
           console.error('AyarlarPage - Kullanıcı bilgileri güncellenirken hata:', updateError);
-          return;
+          hasError = true;
         }
       }
       
@@ -286,19 +290,22 @@ export default function AyarlarPage() {
         
       if (profileError) {
         console.error('AyarlarPage - Profil bilgileri güncellenirken hata:', profileError);
+        hasError = true;
       }
       
-      console.log('AyarlarPage - Kullanıcı bilgileri başarıyla güncellendi');
-      
-      // userData'yı da güncelle
-      setUserData(prev => ({
-        ...prev,
-        avatarUrl: avatarUrl
-      }));
-      
-      // Başarılı mesajını göster ve bir süre sonra gizle
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      if (!hasError) {
+        console.log('AyarlarPage - Kullanıcı bilgileri başarıyla güncellendi');
+        
+        // userData'yı da güncelle
+        setUserData(prev => ({
+          ...prev,
+          avatarUrl: avatarUrl
+        }));
+        
+        // Başarılı mesajını göster ve bir süre sonra gizle
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
     } catch (error) {
       console.error('AyarlarPage - Ayarlar kaydedilirken hata oluştu:', error);
     } finally {
