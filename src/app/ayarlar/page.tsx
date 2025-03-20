@@ -19,6 +19,7 @@ export default function AyarlarPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -209,11 +210,14 @@ export default function AyarlarPage() {
     let hasError = false;
     try {
       setIsSaving(true);
+      setSaveError(false);
+      setSaveSuccess(false);
       
       // Kullanıcı ID'sini al
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.error('AyarlarPage - Kullanıcı bilgisi alınamadı');
+        setSaveError(true);
         return;
       }
       
@@ -273,7 +277,7 @@ export default function AyarlarPage() {
           .eq('id', user.id);
           
         if (updateError) {
-          console.error('AyarlarPage - Kullanıcı bilgileri güncellenirken hata:', updateError);
+          console.error('AyarlarPage - Kullanıcı bilgileri güncellenirken hata:', updateError.message);
           hasError = true;
         }
       }
@@ -289,7 +293,7 @@ export default function AyarlarPage() {
         }, { onConflict: 'id' });
         
       if (profileError) {
-        console.error('AyarlarPage - Profil bilgileri güncellenirken hata:', profileError);
+        console.error('AyarlarPage - Profil bilgileri güncellenirken hata:', profileError.message || profileError);
         hasError = true;
       }
       
@@ -305,9 +309,14 @@ export default function AyarlarPage() {
         // Başarılı mesajını göster ve bir süre sonra gizle
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        setSaveError(true);
+        setTimeout(() => setSaveError(false), 3000);
       }
     } catch (error) {
       console.error('AyarlarPage - Ayarlar kaydedilirken hata oluştu:', error);
+      setSaveError(true);
+      setTimeout(() => setSaveError(false), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -335,13 +344,18 @@ export default function AyarlarPage() {
             <Settings className="mr-2" fontSize="large" /> Ayarlar
           </h1>
           <div className="ml-auto">
+            {saveError && (
+              <div className="mr-3 bg-red-700/80 text-white px-3 py-1 rounded-lg animate-pulse">
+                Hata oluştu!
+              </div>
+            )}
             <button
-              className={`px-4 py-2 rounded-lg flex items-center ${saveSuccess ? 'bg-green-600' : isSaving ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-500'} transition-colors`}
+              className={`px-4 py-2 rounded-lg flex items-center ${saveSuccess ? 'bg-green-600' : saveError ? 'bg-red-600' : isSaving ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-500'} transition-colors`}
               onClick={handleSaveSettings}
               disabled={isSaving}
             >
               <Save className="mr-2" fontSize="small" />
-              {saveSuccess ? 'Kaydedildi!' : isSaving ? 'Kaydediliyor...' : 'Kaydet'}
+              {saveSuccess ? 'Kaydedildi!' : saveError ? 'Tekrar Dene' : isSaving ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
           </div>
         </div>
