@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import { AnimatePresence } from "framer-motion";
 import StructuredData from "@/components/ui/structured-data";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,7 +75,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <head>
         <link rel="canonical" href="https://pii.email" />
       </head>
@@ -82,8 +84,25 @@ export default function RootLayout({
       >
         <StructuredData />
         <AnimatePresence>
-          {children}
+          <main className="relative">
+            {children}
+          </main>
         </AnimatePresence>
+        <Analytics />
+        
+        {/* Google Analytics Script */}
+        <Script
+          strategy="lazyOnload"
+          src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+        />
+        <Script id="google-analytics" strategy="lazyOnload">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-XXXXXXXXXX');
+          `}
+        </Script>
       </body>
     </html>
   );
