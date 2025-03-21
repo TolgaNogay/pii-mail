@@ -35,22 +35,10 @@ export default function Home() {
           </div>
           <div className="flex gap-3">
             <Link 
-              href="/bulut" 
-              className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm hover:border-white/40"
-            >
-              Bulut
-            </Link>
-            <Link 
               href="/giris" 
               className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm hover:border-white/40"
             >
               Giriş Yap
-            </Link>
-            <Link 
-              href="/iletisim" 
-              className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-all text-sm shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
-            >
-              İletişime Geçin
             </Link>
           </div>
         </div>
@@ -58,26 +46,47 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 relative z-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-block mb-2 px-3 py-1 bg-blue-500/10 rounded-full text-blue-400 text-sm font-medium border border-blue-500/20">
-            beta sürümü yakında.
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-5 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight">
-            E-postanın geleceği burada.
-          </h1>
-          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
-            PiMail ile e-postayı istediğiniz şekilde deneyimleyin — gizliliğinizi ve güvenliğinizi ön planda tutan ilk açık kaynaklı e-posta uygulaması.
-          </p>
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            className="inline-block mb-4 px-4 py-2 bg-blue-500/10 rounded-full text-blue-400 text-sm font-medium border border-blue-500/20"
+          >
+            Güvenli ve Gizlilik Odaklı E-posta Deneyimi
+          </motion.div>
+          <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight"
+          >
+            E-postanın geleceği<br />burada başlıyor.
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed"
+          >
+            PiMail ile e-postayı istediğiniz şekilde deneyimleyin — <span className="text-blue-400 font-medium">gizliliğinizi ve güvenliğinizi</span> ön planda tutan ilk açık kaynaklı e-posta uygulaması. Hızlı, modern ve kullanıcı dostu arayüzü ile e-postalarınızı daha verimli yönetin.
+          </motion.p>
           
-          <div className="flex flex-col items-center mb-10">
-            <div className="relative w-full max-w-sm mb-2">
-              <div className="relative flex items-center bg-gray-900 border border-gray-800 rounded-lg">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col items-center mb-10"
+          >
+            <div className="relative w-full max-w-md mb-4">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-20"></div>
+              <div className="relative flex items-center bg-gray-900/80 border border-gray-800 rounded-lg backdrop-blur-sm">
                 <input 
                   type="email" 
                   placeholder="ad@pii.email" 
-                  className="w-full px-3 py-3 bg-transparent border-0 rounded-l-lg text-white placeholder-gray-500 focus:outline-none focus:ring-0"
+                  className="w-full px-4 py-4 bg-transparent border-0 rounded-l-lg text-white placeholder-gray-500 focus:outline-none focus:ring-0"
                 />
-                <button className="px-4 py-3 bg-blue-600 hover:bg-blue-500 transition-all rounded-r-lg text-white text-sm font-medium">
+                <button className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-all rounded-r-lg text-white text-sm font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30">
                   Katıl
                 </button>
               </div>
@@ -86,12 +95,18 @@ export default function Home() {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               <span><span className="font-semibold text-white">15+</span> kişi bekleme listesine katıldı.</span>
             </p>
-          </div>
+          </motion.div>
         </div>
         
         {/* Email Preview */}
-        <div className="w-full max-w-5xl mt-8 relative">
-          <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden shadow-2xl relative">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="w-full max-w-5xl relative"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg blur-3xl"></div>
+          <div className="relative bg-gray-900 rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
             {/* Window Controls */}
             <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-black/40 backdrop-blur-sm">
               <div className="flex space-x-1.5">
@@ -208,7 +223,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
         
         {/* Features Section */}
         <div className="w-full max-w-6xl mt-24 mb-16">
@@ -222,10 +237,10 @@ export default function Home() {
               Benzersiz Özellikler
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text">
-              Neden PiMail?
+              Neden PiMail Tercih Edilmeli?
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              PiMail, e-posta deneyiminizi yeniden tanımlayan modern, güvenli ve kullanıcı dostu bir platformdur. İşte PiMail'i özel kılan özellikler:
+              PiMail, e-posta deneyiminizi yeniden tanımlayan <strong>modern</strong>, <strong>güvenli</strong> ve <strong>kullanıcı dostu</strong> bir platformdur. İşte PiMail'i özel kılan özellikler:
             </p>
           </motion.div>
           
@@ -233,14 +248,16 @@ export default function Home() {
             <motion.div 
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-gradient-to-b from-gray-800/50 to-gray-900/50 p-6 rounded-xl border border-gray-800 backdrop-blur-sm hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10 transition-all group"
+              transition={{ duration: 0.8, delay: 0.1 }}
+              className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 transition-all group"
             >
-              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center mb-4 text-blue-400 group-hover:bg-blue-500/30 group-hover:scale-110 transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <div className="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 mb-5 group-hover:bg-blue-500/30 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
               </div>
-              <h3 className="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">Güvenli İletişim</h3>
-              <p className="text-gray-400">Uçtan uca şifreleme ile mesajlarınız her zaman güvende. Verileriniz yalnızca sizin kontrolünüzde, üçüncü tarafların erişimi olmadan.</p>
+              <h3 className="text-xl font-bold mb-3 text-white group-hover:text-blue-400 transition-all">Gelişmiş Gizlilik</h3>
+              <p className="text-gray-400 group-hover:text-gray-300 transition-all">
+                Uçtan uca şifreleme ve gizlilik odaklı tasarım ile verilerinizi koruyoruz. Tüm e-postalarınız güvenle saklanır.
+              </p>
             </motion.div>
             
             <motion.div 
@@ -402,9 +419,45 @@ export default function Home() {
             </Link>
           </motion.div>
         </div>
+
+        {/* SEO Enhancement: FAQ Section */}
+        <div className="w-full max-w-4xl mb-20">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text">
+            Sık Sorulan Sorular
+          </h2>
+          
+          <div className="space-y-4">
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
+              <h3 className="text-lg font-medium mb-2 text-white">PiMail nedir?</h3>
+              <p className="text-gray-400">
+                PiMail, modern, güvenli ve kullanıcı dostu bir e-posta hizmetidir. Gizliliğinizi ve güvenliğinizi ön planda tutan açık kaynaklı bir e-posta çözümü sunuyoruz.
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
+              <h3 className="text-lg font-medium mb-2 text-white">PiMail'i kullanmak için ücret ödemem gerekiyor mu?</h3>
+              <p className="text-gray-400">
+                PiMail'in temel özellikleri ücretsizdir. İleri düzey özellikler için uygun fiyatlı premium planlarımız bulunmaktadır.
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
+              <h3 className="text-lg font-medium mb-2 text-white">E-postalarım ne kadar güvende?</h3>
+              <p className="text-gray-400">
+                PiMail, uçtan uca şifreleme ve gelişmiş güvenlik protokolleri kullanarak e-postalarınızı korur. Hiçbir üçüncü taraf, siz izin vermedikçe e-postalarınızın içeriğine erişemez.
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
+              <h3 className="text-lg font-medium mb-2 text-white">Diğer e-posta servislerinden PiMail'e nasıl geçiş yapabilirim?</h3>
+              <p className="text-gray-400">
+                PiMail, mevcut e-posta hesaplarınızdan kolay aktarım sağlayan araçlar sunar. Tüm e-postalarınızı, kişilerinizi ve klasörlerinizi birkaç tıklama ile PiMail'e aktarabilirsiniz.
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
 
-      {/* Footer */}
       <Footer />
     </motion.div>
   );
