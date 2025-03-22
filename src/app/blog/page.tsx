@@ -240,21 +240,11 @@ export default function BlogPage() {
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">
-                        {post.author.charAt(0)}
-                      </div>
-                      <div className="min-w-0 max-w-[120px]">
-                        <p className="text-sm font-medium text-white truncate">
-                          {post.author}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">{post.authorRole}</p>
-                      </div>
+                    <div className="text-xs text-gray-400">
+                      {post.date}
                     </div>
-                    <div className="text-xs text-gray-500 flex items-center gap-2 flex-shrink-0">
-                      <span>{post.date}</span>
-                      <span>•</span>
-                      <span>{post.readTime}</span>
+                    <div className="text-xs text-gray-400">
+                      {post.readTime}
                     </div>
                   </div>
                 </div>

@@ -171,23 +171,13 @@ export default function BlogPostPage() {
                 </span>
                 <span className="text-gray-400 text-sm">•</span>
                 <span className="text-gray-400 text-sm">{post.readTime}</span>
+                <span className="text-gray-400 text-sm">•</span>
+                <span className="text-gray-400 text-sm">{post.date}</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight">
                 {post.title}
               </h1>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-500/20">
-                  {post.author.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-medium text-lg">{post.author}</p>
-                  <p className="text-gray-400">{post.authorRole}</p>
-                </div>
-                <div className="text-gray-400">•</div>
-                <div className="text-gray-400">{post.date}</div>
-              </div>
             </div>
           </motion.div>
 
@@ -199,25 +189,6 @@ export default function BlogPostPage() {
             className="prose prose-invert prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
-
-          {/* Author Bio */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-16 p-8 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-xl border border-gray-800"
-          >
-            <div className="flex items-start space-x-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-blue-500/20">
-                {post.author.charAt(0)}
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">{post.author}</h3>
-                <p className="text-gray-400 mb-4">{post.authorRole}</p>
-                <p className="text-gray-300">{post.authorBio}</p>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Related Posts */}
           {relatedPosts.length > 0 && (
