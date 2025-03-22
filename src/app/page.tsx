@@ -1,35 +1,149 @@
 'use client';
-import { Suspense, lazy } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Footer from "@/components/ui/Footer";
-import { Zap, Shield, MessageSquare } from "lucide-react";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import { useWaitlist } from '@/hooks/useWaitlist';
 
-// Lazy load components
-const LazyFeatureCard = lazy(() => import("@/components/ui/feature-card"));
+// Dinamik olarak yüklenen bileşenler
+const Features = dynamic(() => import('@/components/sections/Features'), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-900/50 rounded-xl" />
+});
+
+const FAQ = dynamic(() => import('@/components/sections/FAQ'), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-900/50 rounded-xl" />
+});
+
+const EmailPreview = dynamic(() => import('@/components/sections/EmailPreview'), {
+  loading: () => <div className="h-[450px] animate-pulse bg-gray-900/50 rounded-xl" />
+});
 
 export default function Home() {
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [particles, setParticles] = useState<Array<{ top: string; left: string; delay: string }>>([]);
+  const { joinWaitlist, getWaitlistCount, isLoading, error, waitlistCount } = useWaitlist();
+
+  // Client-side only rendering için useEffect
+  useEffect(() => {
+    setMounted(true);
+    
+    // Bekleme listesi sayısını al
+    const fetchWaitlistCount = async () => {
+      await getWaitlistCount();
+    };
+    fetchWaitlistCount();
+
+    // 30 saniyede bir sayacı güncelle
+    const interval = setInterval(fetchWaitlistCount, 30000);
+
+    // Optimize edilmiş parçacık oluşturma
+    const generateParticles = () => {
+      const newParticles = Array.from({ length: 15 }).map(() => ({
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        delay: `${Math.random() * 2}s`
+      }));
+      setParticles(newParticles);
+    };
+    generateParticles();
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await joinWaitlist(email);
+    if (result.success) {
+      setEmail('');
+      setShowSuccess(true);
+      // Kayıt başarılı olduktan sonra sayacı hemen güncelle
+      await getWaitlistCount();
+      setTimeout(() => setShowSuccess(false), 5000);
+    }
+  };
+
+  // Client-side only rendering
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 1 }}
       className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white font-[family-name:var(--font-geist-sans)] flex flex-col relative overflow-hidden"
     >
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/3 -left-40 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 left-1/2 transform -translate-x-1/2 w-full h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
+      {/* Optimize edilmiş arka plan elementleri */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern with Gradient Overlay */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(to bottom, rgba(0,0,0,0.2), transparent 30%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.4)),
+            radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)
+          `,
+          backgroundSize: '100% 100%, 32px 32px'
+        }}></div>
+
+        {/* Simplified Animated Circles */}
+        <div className="absolute -top-1/4 -left-1/4 w-[800px] h-[800px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/5 to-blue-500/10 rounded-full blur-3xl animate-pulse-slow"></div>
+        </div>
+        
+        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px]">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-purple-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+        </div>
+
+        {/* Optimized Floating Particles */}
+        <div className="absolute inset-0">
+          {particles.map((particle, i) => (
+            <div
+              key={i}
+              className={`absolute rounded-full ${
+                i % 2 === 0 ? 'w-1 h-1 bg-blue-500/20' : 'w-2 h-2 bg-purple-500/15'
+              }`}
+              style={{
+                top: particle.top,
+                left: particle.left,
+                animation: `float 4s ease-in-out infinite`,
+                animationDelay: particle.delay
+              }}
+            ></div>
+          ))}
+        </div>
+
+        {/* Single Code Element */}
+        <div
+          className="absolute font-mono text-sm whitespace-nowrap animate-float-slow text-blue-500/5"
+          style={{
+            top: '30%',
+            left: '15%',
+            transform: 'rotate(6deg)',
+          }}
+        >
+          &lt;encryption&gt;secure_mail&lt;/encryption&gt;
+        </div>
       </div>
 
-      {/* Header */}
-      <header className="p-4 relative z-10 backdrop-blur-sm bg-black/20">
+      {/* Header - Optimize edilmiş */}
+      <header className="sticky top-0 z-50 p-4 backdrop-blur-sm bg-black/20 border-b border-white/5">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-30 animate-pulse"></div>
+              <div className="absolute inset-0 bg-blue-500 rounded-full blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white relative z-10">
                 <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -37,11 +151,11 @@ export default function Home() {
               </svg>
             </div>
             <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">Pii.Mail</span>
-          </div>
+          </Link>
           <div className="flex gap-3">
             <Link 
               href="/giris" 
-              className="px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-all text-sm hover:border-white/40"
+              className="px-4 py-2 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-sm font-medium"
             >
               Giriş Yap
             </Link>
@@ -49,319 +163,230 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="inline-block mb-4 px-4 py-2 bg-blue-500/10 rounded-full text-blue-400 text-sm font-medium border border-blue-500/20"
-          >
-            Güvenli ve Gizlilik Odaklı E-posta Deneyimi
-          </motion.div>
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight"
-          >
-            E-postanın geleceği<br />burada başlıyor.
-          </motion.h1>
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed"
-          >
-            PiMail ile e-postayı istediğiniz şekilde deneyimleyin — <span className="text-blue-400 font-medium">gizliliğinizi ve güvenliğinizi</span> ön planda tutan ilk açık kaynaklı e-posta uygulaması. Hızlı, modern ve kullanıcı dostu arayüzü ile e-postalarınızı daha verimli yönetin.
-          </motion.p>
-          
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col items-center mb-10"
-          >
-            <div className="relative w-full max-w-md mb-4">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-20"></div>
-              <div className="relative flex items-center bg-gray-900/80 border border-gray-800 rounded-lg backdrop-blur-sm">
-                <input 
-                  type="email" 
-                  placeholder="ad@pii.email" 
-                  className="w-full px-4 py-4 bg-transparent border-0 rounded-l-lg text-white placeholder-gray-500 focus:outline-none focus:ring-0"
-                />
-                <button className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 transition-all rounded-r-lg text-white text-sm font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30">
-                  Katıl
-                </button>
-              </div>
-            </div>
-            <p className="text-gray-400 text-sm flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              <span><span className="font-semibold text-white">15+</span> kişi bekleme listesine katıldı.</span>
-            </p>
-          </motion.div>
+      {/* Hero Section - Optimize edilmiş */}
+      <main className="flex-1 flex flex-col relative z-10">
+        <div className="flex flex-col items-center justify-center px-4 py-16 md:py-24 relative">
+          {/* Enhanced Hero Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Improved Grid Pattern with Gradient Overlay */}
+            <div className="absolute inset-0" style={{
+              backgroundImage: `
+                linear-gradient(to bottom, rgba(0,0,0,0.2), transparent),
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)
+              `,
+              backgroundSize: '100% 100%, 32px 32px'
+            }}></div>
+            
+            {/* Enhanced Animated Circles */}
+            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rotate-45">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/10 to-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute inset-10 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute inset-20 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         </div>
         
-        {/* Email Preview */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="w-full max-w-5xl relative"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg blur-3xl"></div>
-          <div className="relative bg-gray-900 rounded-lg border border-gray-800 overflow-hidden shadow-2xl">
-            {/* Window Controls */}
-            <div className="flex items-center justify-between p-3 border-b border-gray-800 bg-black/40 backdrop-blur-sm">
-              <div className="flex space-x-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              </div>
-              <div className="absolute left-1/2 transform -translate-x-1/2 text-xs text-gray-500 font-inter">
-                data@pii.email
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-1 text-gray-400 hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-                </button>
-                <button className="p-1 text-gray-400 hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
-                </button>
-                <button className="p-1 text-gray-400 hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-              </div>
-            </div>
-            <div className="flex h-[450px]">
-              {/* Sidebar */}
-              <div className="w-64 border-r border-gray-800 p-3 hidden md:block bg-gray-900/80">
-                <div className="mb-6">
-                  <div className="relative">
-                    <input 
-                      type="text" 
-                      placeholder="E-posta ara..." 
-                      className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  </div>
+            <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] -rotate-45">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-blue-500/10 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute inset-10 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+              <div className="absolute inset-20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-xl animate-pulse" style={{ animationDelay: '2.5s' }}></div>
                 </div>
                 
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20">P</div>
-                    <span className="font-medium">destek@pii.email</span>
-                  </div>
-                  <span className="text-xs text-gray-500">14 Şub</span>
-                </div>
-                
-                <div className="space-y-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className={`p-2.5 rounded-lg transition-all ${i === 1 ? 'bg-gradient-to-r from-blue-600/20 to-blue-500/10 border border-blue-500/30' : 'hover:bg-gray-800/70'}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm truncate">
-                          {i === 1 ? 'PiMail Ekibi' : 
-                           i === 2 ? 'Kariyer Fırsatları' : 
-                           i === 3 ? 'Ahmet Yılmaz' : 
-                           i === 4 ? (
-                             <span className="flex items-center">
-                               Netflix Türkiye
-                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 ml-1 text-blue-500">
-                                 <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12a4.49 4.49 0 01-1.549 3.397 4.491 4.491 0 01-1.307 3.497 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75a4.49 4.49 0 01-3.397-1.549 4.49 4.49 0 01-3.498-1.306 4.491 4.491 0 01-1.307-3.498A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.497 4.49 4.49 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
-                               </svg>
-                             </span>
-                           ) : 
-                           'Teknoloji Haberleri'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {i === 1 ? '14/02' : 
-                           i === 2 ? '15/02' : 
-                           i === 3 ? '16/02' : 
-                           i === 4 ? '17/02' : 
-                           '18/02'}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-400 truncate">
-                        {i === 1 ? 'E-postanın geleceğini birlikte inşa ediyoruz!' : 
-                         i === 2 ? 'Yazılım Geliştirici pozisyonu için başvurunuz alındı' : 
-                         i === 3 ? 'Hafta sonu planları hakkında konuşabilir miyiz?' : 
-                         i === 4 ? 'Yeni içerikler ve özel teklifler sizi bekliyor!' : 
-                         'Bu haftanın en önemli teknoloji gelişmeleri ve yenilikler'}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Enhanced Gradient Lines */}
+            <div className="absolute inset-0">
+              <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
+              <div className="absolute top-1/2 -translate-y-24 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"></div>
+              <div className="absolute top-1/2 translate-y-24 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/10 to-transparent"></div>
               
-              {/* Email Content */}
-              <div className="flex-1 p-6 bg-gradient-to-b from-gray-900 to-black">
-                <div className="mb-6">
-                  <div className="flex items-center mb-5">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold mr-3 shadow-lg shadow-blue-500/20">P</div>
-                    <div>
-                      <h3 className="font-medium">destek@pii.email — PiMail Ekibi</h3>
-                      <div className="text-xs text-gray-500">14 Şubat 2024, 9:00 ÖÖ</div>
-                    </div>
+              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-gradient-to-b from-transparent via-purple-500/20 to-transparent"></div>
+              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-24 w-px bg-gradient-to-b from-transparent via-blue-500/10 to-transparent"></div>
+              <div className="absolute top-0 bottom-0 left-1/2 translate-x-24 w-px bg-gradient-to-b from-transparent via-purple-500/10 to-transparent"></div>
                   </div>
-                  <h2 className="text-2xl font-bold mb-5 bg-gradient-to-r from-white to-gray-300 text-transparent bg-clip-text">E-postanın geleceğini PiMail ile inşa ediyoruz!</h2>
-                  
-                  <div className="space-y-4 text-gray-300 leading-relaxed">
-                    <p>
-                      E-posta, onlarca yıldır değişmedi, ancak biz bunu değiştiriyoruz. PiMail, modern özellikleri güvenilirlikle birleştirerek gerçekten sevebileceğiniz bir e-posta deneyimi sunuyor.
-                    </p>
-                    <p>
-                      Misyonumuz, çevrimiçi iletişim şeklinizi dönüştürmek. Sizi bu yolculukta bizimle birlikte olmaya davet ediyoruz!
-                    </p>
-                    <p>
-                      Bugünün dünyasında e-postanın nasıl olabileceğini yeniden hayal etmek için heyecanlıyız. PiMail'e hoş geldiniz!
-                    </p>
+            
+            {/* Enhanced Code-like Elements */}
+            <div className="absolute top-1/4 left-[15%] text-blue-500/5 font-mono text-sm whitespace-nowrap rotate-6 animate-float-slow">
+              &lt;encryption&gt;secure_mail&lt;/encryption&gt;
                   </div>
+            <div className="absolute bottom-1/3 right-[15%] text-purple-500/5 font-mono text-sm whitespace-nowrap -rotate-6 animate-float-slow" style={{ animationDelay: '1.5s' }}>
+              {'{privacy: "enabled"}'}
                 </div>
                 
-                <div className="pt-4 border-t border-gray-800 mt-8 text-right">
-                  <button className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white text-sm font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center gap-2 ml-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
-                    PiMail Ekibine Yanıtla
+            {/* Enhanced Floating Particles */}
+            <div className="absolute inset-0">
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`absolute rounded-full ${
+                    i % 3 === 0 ? 'w-1 h-1 bg-blue-500/30' :
+                    i % 3 === 1 ? 'w-2 h-2 bg-purple-500/20' :
+                    'w-1.5 h-1.5 bg-blue-400/25'
+                  }`}
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                    animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
+                    animationDelay: `${Math.random() * 3}s`
+                  }}
+                ></div>
+              ))}
+                </div>
+
+            {/* Glowing Orbs */}
+            <div className="absolute top-1/4 right-1/3 w-4 h-4">
+              <div className="absolute inset-0 bg-blue-400 rounded-full blur-sm animate-glow"></div>
+              <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm animate-ping"></div>
+              </div>
+            <div className="absolute bottom-1/3 left-1/4 w-4 h-4">
+              <div className="absolute inset-0 bg-purple-400 rounded-full blur-sm animate-glow"></div>
+              <div className="absolute inset-0 bg-purple-500 rounded-full blur-sm animate-ping" style={{ animationDelay: '1s' }}></div>
+            </div>
+          </div>
+        
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            style={{ opacity }}
+            className="max-w-4xl mx-auto text-center relative"
+          >
+            <div className="inline-block mb-4 px-4 py-2 bg-blue-500/10 rounded-full text-blue-400 text-sm font-medium border border-blue-500/20">
+              Güvenli ve Gizlilik Odaklı E-posta Deneyimi
+            </div>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight">
+              E-postanın geleceği<br />burada başlıyor.
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+              PiMail ile e-postayı istediğiniz şekilde deneyimleyin — 
+              <span className="text-blue-400 font-medium"> gizliliğinizi ve güvenliğinizi </span> 
+              ön planda tutan ilk açık kaynaklı e-posta uygulaması.
+            </p>
+
+            {/* Email Signup - Optimize edilmiş */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex flex-col items-center mb-10"
+            >
+              <form onSubmit={handleSubmit} className="relative w-full max-w-md mb-4">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg blur opacity-20"></div>
+                <div className="relative flex items-center bg-gray-900/80 border border-gray-800 rounded-lg backdrop-blur-sm overflow-hidden">
+                  <input 
+                    type="email" 
+                    placeholder="ad@pii.email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                    className="w-full px-4 py-4 bg-transparent border-0 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
+                  />
+                  <button 
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-sm font-medium transition-all rounded-r-lg flex items-center gap-2 group disabled:opacity-50"
+                  >
+                    <span>{isLoading ? 'Kaydediliyor...' : 'Katıl'}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:translate-x-1 transition-transform">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-        
+                {error && (
+                  <div className="absolute -bottom-6 left-0 right-0 text-center text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+              </form>
+              <p className="text-gray-400 text-sm flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span><span className="font-semibold text-white">{waitlistCount}+</span> kişi bekleme listesine katıldı</span>
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Email Preview Section */}
+        <Suspense fallback={<div className="h-[450px] animate-pulse bg-gray-900/50 rounded-xl" />}>
+          <EmailPreview />
+        </Suspense>
+
         {/* Features Section */}
-        <div className="w-full max-w-6xl mt-24 mb-16">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <div className="inline-block mb-3 px-4 py-1.5 bg-blue-500/10 rounded-full text-blue-400 text-sm font-medium border border-blue-500/20">
-              Benzersiz Özellikler
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text">
-              Neden PiMail Tercih Edilmeli?
-            </h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">
-              PiMail, e-posta deneyiminizi yeniden tanımlayan <strong>modern</strong>, <strong>güvenli</strong> ve <strong>kullanıcı dostu</strong> bir platformdur. İşte PiMail'i özel kılan özellikler:
-            </p>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Gelişmiş Gizlilik"
-                description="Uçtan uca şifreleme ve gizlilik odaklı tasarım ile verilerinizi koruyoruz. Tüm e-postalarınız güvenle saklanır."
-                icon={<Zap size={24} />}
-              />
-            </Suspense>
-            
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Hızlı Arayüz"
-                description="Modern teknolojilerle geliştirilmiş akıcı deneyim. Hiçbir gecikme olmadan e-postalarınızı yönetin ve anında yanıt verin."
-                icon={<Shield size={24} />}
-              />
-            </Suspense>
-            
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Karanlık Tema"
-                description="Göz yorgunluğunu azaltan şık tasarım. Gece veya gündüz, her zaman konforlu bir deneyim sunan arayüz."
-                icon={<MessageSquare size={24} />}
-              />
-            </Suspense>
-          </div>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-gray-900/50 rounded-xl" />}>
+          <Features />
+        </Suspense>
 
-          {/* Additional Features */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Akıllı Filtreleme"
-                description="Yapay zeka destekli filtreleme ile önemli e-postalarınızı asla kaçırmayın."
-              />
-            </Suspense>
-            
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Çoklu Hesap Desteği"
-                description="Tüm e-posta hesaplarınızı tek bir arayüzden yönetin."
-              />
-            </Suspense>
-            
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Otomatik Yanıtlar"
-                description="Tatildeyken veya meşgulken otomatik yanıtlar oluşturun."
-              />
-            </Suspense>
-            
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>}>
-              <LazyFeatureCard
-                title="Offline Erişim"
-                description="İnternet bağlantınız olmadığında bile e-postalarınıza erişin."
-              />
-            </Suspense>
-          </div>
-          
-          {/* Call to Action */}
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="mt-16 text-center"
-          >
-            <Link 
-              href="/ozellikler" 
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg text-white font-medium transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 inline-flex items-center gap-2"
-            >
-              Tüm Özellikleri Keşfedin
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* SEO Enhancement: FAQ Section */}
-        <div className="w-full max-w-4xl mb-20">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-8 bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text">
-            Sık Sorulan Sorular
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-medium mb-2 text-white">PiMail nedir?</h3>
-              <p className="text-gray-400">
-                PiMail, modern, güvenli ve kullanıcı dostu bir e-posta hizmetidir. Gizliliğinizi ve güvenliğinizi ön planda tutan açık kaynaklı bir e-posta çözümü sunuyoruz.
-              </p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-medium mb-2 text-white">PiMail'i kullanmak için ücret ödemem gerekiyor mu?</h3>
-              <p className="text-gray-400">
-                PiMail'in temel özellikleri ücretsizdir. İleri düzey özellikler için uygun fiyatlı premium planlarımız bulunmaktadır.
-              </p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-medium mb-2 text-white">E-postalarım ne kadar güvende?</h3>
-              <p className="text-gray-400">
-                PiMail, uçtan uca şifreleme ve gelişmiş güvenlik protokolleri kullanarak e-postalarınızı korur. Hiçbir üçüncü taraf, siz izin vermedikçe e-postalarınızın içeriğine erişemez.
-              </p>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800">
-              <h3 className="text-lg font-medium mb-2 text-white">Diğer e-posta servislerinden PiMail'e nasıl geçiş yapabilirim?</h3>
-              <p className="text-gray-400">
-                PiMail, mevcut e-posta hesaplarınızdan kolay aktarım sağlayan araçlar sunar. Tüm e-postalarınızı, kişilerinizi ve klasörlerinizi birkaç tıklama ile PiMail'e aktarabilirsiniz.
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* FAQ Section */}
+        <Suspense fallback={<div className="h-96 animate-pulse bg-gray-900/50 rounded-xl" />}>
+          <FAQ />
+        </Suspense>
       </main>
 
       <Footer />
+
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed bottom-4 right-4 bg-green-500/90 text-white px-6 py-3 rounded-lg shadow-lg backdrop-blur-sm z-50 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>Bekleme listesine başarıyla eklendi!</span>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.05);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+          }
+          50% {
+            transform: translateY(-10px) translateX(5px);
+          }
+        }
+
+        @keyframes float-slow {
+          0%, 100% {
+            transform: translateY(0) rotate(var(--tw-rotate));
+            opacity: 0.1;
+          }
+          50% {
+            transform: translateY(-10px) rotate(var(--tw-rotate));
+            opacity: 0.15;
+          }
+        }
+
+        @keyframes glow {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+          }
+        }
+
+        @keyframes gradient-shift {
+          0%, 100% {
+            opacity: 0.2;
+            transform: translateY(0);
+          }
+          50% {
+            opacity: 0.4;
+            transform: translateY(20px);
+          }
+        }
+      `}</style>
     </motion.div>
   );
 }

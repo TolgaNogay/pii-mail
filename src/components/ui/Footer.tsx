@@ -15,8 +15,14 @@ const navigation = {
           name: "Hakkımızda",
           items: [
             { name: "Hakkımızda", href: "/hakkimizda" },
-            { name: "Ekibimiz", href: "/ekibimiz" },
-            { name: "Kariyer", href: "/kariyer" },
+            { 
+              name: "Kariyer", 
+              href: "/kariyer",
+              badge: {
+                text: "Açık Pozisyonlar",
+                className: "ml-1 px-1.5 py-0.5 text-[10px] rounded-none bg-blue-500/20 text-blue-200 border border-blue-500/30"
+              }
+            },
           ],
         },
         {
@@ -166,6 +172,11 @@ export function Footer() {
                           className="text-sm text-gray-400 hover:text-white transition-colors hover:translate-x-1 inline-flex items-center gap-1 group"
                         >
                           <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span> {item.name}
+                          {item.badge && (
+                            <span className={item.badge.className}>
+                              {item.badge.text}
+                            </span>
+                          )}
                         </Link>
                       </li>
                     ))}

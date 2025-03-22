@@ -1,0 +1,19 @@
+User-agent: *
+Disallow: /giris
+Disallow: /admin
+Disallow: /yonetici
+Disallow: /panel
+
+# Block specific files
+Disallow: /*.php$
+Disallow: /*.sql$
+Disallow: /*.config$
+Disallow: /*.env$
+
+# Allow specific directories
+Allow: /blog
+Allow: /ozellikler
+Allow: /iletisim
+Allow: /hakkimizda
+Allow: /assets
+Allow: /images 
