@@ -3,6 +3,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Footer from "@/components/ui/Footer";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 
 // TypeScript interface for blog post data
 interface BlogPost {
@@ -178,6 +179,33 @@ export default function BlogPostPage() {
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-blue-100 to-white text-transparent bg-clip-text leading-tight">
                 {post.title}
               </h1>
+            </div>
+          </motion.div>
+
+          {/* Post Featured Image */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mb-10 rounded-xl overflow-hidden relative"
+          >
+            <div className="aspect-[16/9] bg-gray-800 relative">
+              {/* Actual image */}
+              <Image 
+                src="/blog/email-security.jpg" 
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+              />
+              
+              {/* Overlay gradient for better text visibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-70"></div>
+              
+              {/* Image caption */}
+              <div className="absolute bottom-4 left-4 right-4 text-white text-sm">
+                <p className="font-medium">E-posta güvenliği için kritik önlemler almanız gerekiyor</p>
+              </div>
             </div>
           </motion.div>
 
