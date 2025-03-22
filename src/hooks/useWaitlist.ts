@@ -7,6 +7,23 @@ export const useWaitlist = () => {
   const [error, setError] = useState<string | null>(null);
   const [waitlistCount, setWaitlistCount] = useState<number>(0);
 
+  const updateWaitlistCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        console.error('Sayaç alma hatası:', error);
+        return;
+      }
+      
+      setWaitlistCount(count ?? 0);
+    } catch (err) {
+      console.error('Bekleme listesi sayısı alınamadı:', err);
+    }
+  };
+
   const joinWaitlist = async (email: string) => {
     try {
       setIsLoading(true);
@@ -55,17 +72,8 @@ export const useWaitlist = () => {
         throw new Error('Bekleme listesine eklenirken bir hata oluştu.');
       }
 
-      // Toplam kayıt sayısını güncelle
-      const { count, error: countError } = await supabase
-        .from('waitlist')
-        .select('*', { count: 'exact', head: true });
-
-      if (countError) {
-        console.error('Sayaç güncelleme hatası:', countError);
-        throw new Error('Bekleme listesi sayısı güncellenirken bir hata oluştu.');
-      }
-
-      setWaitlistCount(count || 0);
+      // Kayıt başarılı, sayacı güncelle
+      await updateWaitlistCount();
       return { success: true };
 
     } catch (err) {
@@ -79,26 +87,9 @@ export const useWaitlist = () => {
     }
   };
 
-  const getWaitlistCount = async () => {
-    try {
-      const { count, error } = await supabase
-        .from('waitlist')
-        .select('*', { count: 'exact', head: true });
-
-      if (error) {
-        console.error('Sayaç alma hatası:', error);
-        throw error;
-      }
-      
-      setWaitlistCount(count || 0);
-    } catch (err) {
-      console.error('Bekleme listesi sayısı alınamadı:', err);
-    }
-  };
-
   return {
     joinWaitlist,
-    getWaitlistCount,
+    updateWaitlistCount,
     isLoading,
     error,
     waitlistCount

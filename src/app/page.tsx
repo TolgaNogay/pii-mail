@@ -29,20 +29,17 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [particles, setParticles] = useState<Array<{ top: string; left: string; delay: string }>>([]);
-  const { joinWaitlist, getWaitlistCount, isLoading, error, waitlistCount } = useWaitlist();
+  const { joinWaitlist, updateWaitlistCount, isLoading, error, waitlistCount } = useWaitlist();
 
   // Client-side only rendering için useEffect
   useEffect(() => {
     setMounted(true);
     
-    // Bekleme listesi sayısını al
-    const fetchWaitlistCount = async () => {
-      await getWaitlistCount();
-    };
-    fetchWaitlistCount();
+    // İlk yüklenmede sayıyı alalım
+    updateWaitlistCount();
 
-    // 30 saniyede bir sayacı güncelle
-    const interval = setInterval(fetchWaitlistCount, 30000);
+    // 10 saniyede bir sayacı güncelleyelim
+    const interval = setInterval(updateWaitlistCount, 10000);
 
     // Optimize edilmiş parçacık oluşturma
     const generateParticles = () => {
@@ -63,15 +60,12 @@ export default function Home() {
     const result = await joinWaitlist(email);
     
     if (result.success) {
-      // Track successful waitlist signup
       track('waitlist_signup', { email });
-      
       setEmail('');
       setShowSuccess(true);
-      await getWaitlistCount();
       setTimeout(() => setShowSuccess(false), 5000);
     } else if (result.alreadyRegistered) {
-      setShowSuccess(true); // Zaten kayıtlı kullanıcılar için de başarılı mesajı gösterelim
+      setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 5000);
     }
   };
