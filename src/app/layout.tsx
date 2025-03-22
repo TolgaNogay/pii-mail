@@ -5,7 +5,6 @@ import { AnimatePresence } from "framer-motion";
 import StructuredData from "@/components/ui/structured-data";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -87,7 +86,6 @@ export default function RootLayout({
           </main>
         </AnimatePresence>
         <Analytics />
-        <SpeedInsights />
         
         {/* Google Analytics Script */}
         <Script
