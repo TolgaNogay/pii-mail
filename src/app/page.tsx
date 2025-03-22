@@ -7,6 +7,7 @@ import Footer from "@/components/ui/Footer";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useWaitlist } from '@/hooks/useWaitlist';
+import { track } from '@vercel/analytics';
 
 // Dinamik olarak yüklenen bileşenler
 const Features = dynamic(() => import('@/components/sections/Features'), {
@@ -60,11 +61,17 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await joinWaitlist(email);
+    
     if (result.success) {
+      // Track successful waitlist signup
+      track('waitlist_signup', { email });
+      
       setEmail('');
       setShowSuccess(true);
-      // Kayıt başarılı olduktan sonra sayacı hemen güncelle
       await getWaitlistCount();
+      setTimeout(() => setShowSuccess(false), 5000);
+    } else if (result.alreadyRegistered) {
+      setShowSuccess(true); // Zaten kayıtlı kullanıcılar için de başarılı mesajı gösterelim
       setTimeout(() => setShowSuccess(false), 5000);
     }
   };
@@ -329,7 +336,17 @@ export default function Home() {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
-          <span>Bekleme listesine başarıyla eklendi!</span>
+          <span>Teşekkürler! Bekleme listesinde yeriniz hazır.</span>
+        </div>
+      )}
+
+      {/* Error Notification */}
+      {error && !showSuccess && (
+        <div className="fixed bottom-4 right-4 bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg backdrop-blur-sm z-50 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 00-1.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
         </div>
       )}
 
