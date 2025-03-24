@@ -25,13 +25,9 @@
 - [+] Gelen kutusu sayfası oluşturuldu
 - [+] Profil sayfası oluşturuldu
 - [+] Ayarlar sayfası oluşturuldu
+- [+] Mail arayüzü
 
 ## Yapılacaklar
-- [-] Mail arayüzü
-  - [+] Gelen kutusu
-  - [-] E-posta okuma sayfası
-  - [-] E-posta yazma sayfası
-  - [-] Arşivleme ve etiketleme sistemi
 - [-] Backend entegrasyonu
   - [-] IMAP/SMTP servisleri için API rotaları
   - [-] Veritabanı şeması (PostgreSQL veya MongoDB)
