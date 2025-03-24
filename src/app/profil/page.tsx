@@ -183,33 +183,43 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile Section */}
-        <div className="relative w-full h-64 md:h-80 rounded-xl overflow-hidden mb-20 md:mb-24 bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-gray-800/70 shadow-lg">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/50 to-gray-900/95 z-10"></div>
-          
-          {/* Profile image overlay */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20" style={{ transform: 'translateY(50%)' }}>
-            <div className="relative">
-              <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
-              <div className="w-36 h-36 rounded-full border-4 border-gray-900 bg-gradient-to-br from-blue-500 to-blue-700 shadow-xl shadow-blue-900/30 overflow-hidden relative z-10">
-                <img 
-                  src={getUserAvatar()}
-                  alt={userData.firstName || 'Kullanıcı'} 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column - User Info */}
           <div className="md:col-span-1">
             <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">{userData.firstName} {userData.lastName}</h2>
-                <p className="text-gray-400 mb-6">{userData.bio}</p>
+              {/* Banner and Profile image */}
+              <div className="relative">
+                {/* Banner */}
+                <div className="h-40 relative overflow-hidden">
+                  {/* Gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30"></div>
+                  
+                  {/* Pattern overlay */}
+                  <div className="absolute inset-0 bg-[url('/banner-pattern.svg')] opacity-40"></div>
+                  
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+                </div>
+                
+                {/* Profile image overlaying the banner */}
+                <div className="absolute left-1/2 transform -translate-x-1/2 -bottom-16">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rounded-full"></div>
+                    <div className="w-32 h-32 rounded-full border-4 border-gray-800/80 bg-gradient-to-br from-blue-500 to-blue-700 shadow-xl shadow-blue-900/30 overflow-hidden relative">
+                      <img 
+                        src={getUserAvatar()}
+                        alt={userData.firstName || 'Kullanıcı'} 
+                        className="w-full h-full object-cover" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 mt-16">
+                <h2 className="text-xl font-semibold mb-4 text-center">{userData.firstName} {userData.lastName}</h2>
+                <p className="text-gray-400 mb-6 text-center">{userData.bio}</p>
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 text-gray-300">
