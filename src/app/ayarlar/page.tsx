@@ -31,7 +31,6 @@ export default function AyarlarPage() {
   const checkUser = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("AyarlarPage - Kullanıcı durumu:", user ? "Oturum açık" : "Oturum kapalı", user);
       
       if (!user && !isRedirecting) {
         setIsRedirecting(true);
@@ -39,106 +38,30 @@ export default function AyarlarPage() {
           window.location.href = '/giris';
         }, 100);
       } else if (user) {
-        // Kullanıcının kayıtlı olduğu e-posta adresini belirle
+        // Kullanıcı e-postasını kaydet
         setUserEmail(user.email || '');
+        console.log("AyarlarPage - Kullanıcı oturumu doğrulandı, id:", user.id);
         
-        // Kullanıcı adı ve e-posta bilgisini kullan
-        const userEmail = user.email || '';
-        let firstName = 'Kullanıcı';
-        let lastName = '';
-        
-        // E-postadan ad-soyad tahmin et (basit yaklaşım)
-        if (userEmail) {
-          const emailName = userEmail.split('@')[0];
-          const nameParts = emailName
-            .replace(/[0-9]/g, '') // Rakamları kaldır
-            .replace(/[._-]/g, ' ') // Nokta, alt çizgi ve tire işaretlerini boşluğa çevir
-            .trim()
-            .split(' ');
-          
-          if (nameParts.length > 0) {
-            firstName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1).toLowerCase();
-            
-            if (nameParts.length > 1) {
-              lastName = nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1).toLowerCase();
-            }
-          }
-        }
-        
-        setUserData({
-          firstName,
-          lastName,
-          email: user.email || '',
-          avatarUrl: '',
-        });
-        
-        // Kullanıcının bilgilerini al
-        fetchUserData(user.id);
-      }
-    } catch (error) {
-      console.error("Oturum kontrolü sırasında hata:", error);
-    }
-  };
-
-  const fetchUserData = async (userId: string) => {
-    try {
-      console.log("AyarlarPage - fetchUserData çağrıldı, userId:", userId);
-      
-      // Kullanıcı verilerini al
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!userError && userData) {
-        console.log('AyarlarPage - users tablosundan kullanıcı verileri alındı:', userData);
-        
-        // Verileri ayarla
-        setUserData({
-          firstName: userData.first_name || '',
-          lastName: userData.last_name || '',
-          email: userData.email || '',
-          avatarUrl: userData.avatar_url || '',
-        });
-        
-        return;
-      } else {
-        console.log('AyarlarPage - users tablosundan veri alınamadı, profiles tablosu deneniyor');
-        
-        // Eğer users tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
-        const { data: profileData, error: profileError } = await supabase
+        // Profil bilgilerini çek
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', userId)
+          .select('first_name, last_name, avatar_url')
+          .eq('id', user.id)
           .single();
-          
-        if (!profileError && profileData) {
-          console.log('AyarlarPage - profiles tablosundan kullanıcı verileri alındı:', profileData);
-          
-          // Ad ve soyadı ayıkla
-          let firstName = '';
-          let lastName = '';
-          
-          if (profileData.full_name) {
-            const nameParts = profileData.full_name.split(' ');
-            firstName = nameParts[0] || '';
-            lastName = nameParts.slice(1).join(' ') || '';
-          }
-          
-          // Verileri ayarla
+        
+        if (profileError) {
+          console.error('AyarlarPage - Profil bilgileri alınırken hata:', profileError.message);
+        } else if (profile) {
           setUserData({
-            firstName: firstName,
-            lastName: lastName,
-            email: userEmail, // E-posta bilgisini auth verisinden al
-            avatarUrl: profileData.avatar_url || '',
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            email: user.email || '',
+            avatarUrl: profile.avatar_url || ''
           });
-        } else {
-          console.log('AyarlarPage - profiles tablosundan da veri alınamadı, hata:', profileError);
         }
       }
     } catch (error) {
-      console.error('AyarlarPage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
+      console.error("AyarlarPage - Oturum kontrolü sırasında hata:", error);
     }
   };
 
@@ -207,118 +130,62 @@ export default function AyarlarPage() {
   };
 
   const handleSaveSettings = async () => {
+    setIsSaving(true);
+    setSaveError(false);
+    setSaveSuccess(false);
     let hasError = false;
+    let avatarUrl = userData.avatarUrl;
+
     try {
-      setIsSaving(true);
-      setSaveError(false);
-      setSaveSuccess(false);
-      
-      // Kullanıcı ID'sini al
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('AyarlarPage - Kullanıcı bilgisi alınamadı');
-        setSaveError(true);
-        return;
-      }
-      
-      console.log('AyarlarPage - Ayarları kaydetmeye başlıyorum:', {
-        firstName: userData.firstName,
-        lastName: userData.lastName
-      });
-      
-      // Avatar güncellemesi varsa, önce onu yükle
-      let avatarUrl = userData.avatarUrl;
+      if (!user) throw new Error('Kullanıcı bulunamadı');
+
+      // Avatar yükleme işlemi
       if (avatarFile) {
-        const uploadedUrl = await uploadAvatar();
-        if (uploadedUrl) {
-          avatarUrl = uploadedUrl;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(`${user.id}/${Date.now()}-${avatarFile.name}`, avatarFile);
+
+        if (uploadError) {
+          console.error('AyarlarPage - Avatar yüklenirken hata:', uploadError);
+          hasError = true;
+        } else if (uploadData) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(uploadData.path);
+          avatarUrl = publicUrl;
         }
       }
-      
-      // Kullanıcı tablosunu kontrol et ve gerekirse oluştur
-      const { error: checkError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-        
-      // Kullanıcı yok ise, yeni kayıt oluştur
-      if (checkError) {
-        console.log('AyarlarPage - Kullanıcı tablosunda kayıt bulunamadı, yeni kayıt oluşturuluyor');
-        
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: user.id,
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            email: userData.email || user.email,
-            avatar_url: avatarUrl,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-          
-        if (insertError) {
-          console.error('AyarlarPage - Yeni kullanıcı kaydı oluşturulurken hata:', insertError);
-          hasError = true;
-        }
-      } else {
-        // Kullanıcı var ise, güncelle
-        console.log('AyarlarPage - Kullanıcı kaydı bulundu, güncelleniyor');
-        
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            avatar_url: avatarUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('AyarlarPage - Kullanıcı bilgileri güncellenirken hata:', updateError.message);
-          hasError = true;
-        }
-      }
-      
-      // Aynı zamanda profile tablosunu da güncelle
-      const { error: profileError } = await supabase
+
+      // Sadece profiles tablosunu güncelle
+      const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
           id: user.id,
-          full_name: `${userData.firstName} ${userData.lastName}`.trim(),
+          first_name: userData.firstName,
+          last_name: userData.lastName,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
-        
-      if (profileError) {
-        console.error('AyarlarPage - Profil bilgileri güncellenirken hata:', profileError.message || profileError);
+
+      if (updateError) {
+        console.error('AyarlarPage - Profil bilgileri güncellenirken hata:', updateError.message);
         hasError = true;
       }
-      
+
       if (!hasError) {
-        console.log('AyarlarPage - Kullanıcı bilgileri başarıyla güncellendi');
-        
-        // userData'yı da güncelle
-        setUserData(prev => ({
-          ...prev,
-          avatarUrl: avatarUrl
-        }));
-        
-        // Başarılı mesajını göster ve bir süre sonra gizle
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-      } else {
+      }
+    } catch (error: any) {
+      console.error('AyarlarPage - Ayarlar kaydedilirken beklenmeyen hata:', error);
+      hasError = true;
+    } finally {
+      setIsSaving(false);
+      if (hasError) {
         setSaveError(true);
         setTimeout(() => setSaveError(false), 3000);
       }
-    } catch (error) {
-      console.error('AyarlarPage - Ayarlar kaydedilirken hata oluştu:', error);
-      setSaveError(true);
-      setTimeout(() => setSaveError(false), 3000);
-    } finally {
-      setIsSaving(false);
     }
   };
 

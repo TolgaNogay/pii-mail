@@ -119,68 +119,17 @@ export default function InboxPage() {
     try {
       console.log("InboxPage - fetchUserData çağrıldı, userId:", userId);
       
-      // RLS (Row Level Security) kuralları hatalarından kaçınmak için, 
-      // hem users hem de profiles tablolarını aynı anda sorgulamayı deneyelim
-      const userPromise = supabase
-        .from('users')
+      // Sadece profiles tablosundan veri çek
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
         .select('first_name, last_name, avatar_url')
         .eq('id', userId)
-        .single();
+        .limit(1);
       
-      const profilePromise = supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', userId)
-        .single();
-      
-      // Her iki sorguyu da paralel olarak çalıştır
-      const [userResult, profileResult] = await Promise.all([userPromise, profilePromise]);
-      
-      // Önce users tablosundan veri kullanmayı dene
-      if (!userResult.error && userResult.data) {
-        const firstName = userResult.data.first_name || 'Kullanıcı';
-        const lastName = userResult.data.last_name || '';
+      if (profileError) {
+        console.error('InboxPage - Profiles tablosundan kullanıcı bilgileri alınırken hata:', profileError.message);
         
-        console.log('InboxPage - Users tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
-        
-        setUserData({
-          firstName,
-          lastName,
-          avatarUrl: userResult.data.avatar_url || ''
-        });
-      } 
-      // Users tablosundan veri alınamazsa, profiles tablosundan dene
-      else if (!profileResult.error && profileResult.data) {
-        let firstName = 'Kullanıcı';
-        let lastName = '';
-        
-        if (profileResult.data.full_name) {
-          const nameParts = profileResult.data.full_name.split(' ');
-          firstName = nameParts[0] || firstName;
-          lastName = nameParts.slice(1).join(' ');
-        }
-        
-        console.log('InboxPage - Profiles tablosundan kullanıcı bilgileri alındı:', { firstName, lastName });
-        
-        setUserData({
-          firstName,
-          lastName,
-          avatarUrl: profileResult.data.avatar_url || ''
-        });
-      }
-      // Her iki tablodan da veri alınamazsa
-      else {
-        if (userResult.error) {
-          console.error('InboxPage - Users tablosundan kullanıcı bilgileri alınırken hata:', userResult.error.message);
-        }
-        
-        if (profileResult.error) {
-          console.error('InboxPage - Profiles tablosundan kullanıcı bilgileri alınırken hata:', profileResult.error.message);
-        }
-        
-        console.log('InboxPage - Herhangi bir kullanıcı verisi alınamadı, varsayılan değerler kullanılacak');
-        
-        // Auth verilerini kullanarak en azından bir ad oluşturmaya çalış
+        // Auth verilerini kullanarak varsayılan bir ad oluştur
         const { data: { user } } = await supabase.auth.getUser();
         if (user && user.email) {
           const emailName = user.email.split('@')[0];
@@ -192,12 +141,19 @@ export default function InboxPage() {
           
           const firstName = formattedName.charAt(0).toUpperCase() + formattedName.slice(1).toLowerCase();
           
-          setUserData(prev => ({
-            ...prev,
+          setUserData({
             firstName,
-            lastName: ''
-          }));
+            lastName: '',
+            avatarUrl: ''
+          });
         }
+      } else if (profiles && profiles.length > 0) {
+        const profile = profiles[0];
+        setUserData({
+          firstName: profile.first_name || '',
+          lastName: profile.last_name || '',
+          avatarUrl: profile.avatar_url || ''
+        });
       }
       
       // Her durumda e-postaları yükle
@@ -452,7 +408,7 @@ export default function InboxPage() {
                 onClick={toggleUserMenu}
               >
                 <div className="flex flex-col mr-2">
-                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.firstName || 'Kullanıcı'}</span>
+                  <span className="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">{userData.firstName}</span>
                   <span className="text-xs text-gray-400 truncate">{userEmail}</span>
                 </div>
                 <div className="relative">
@@ -460,7 +416,7 @@ export default function InboxPage() {
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center overflow-hidden">
                     <img 
                       src={getUserAvatar(userData)}
-                      alt={userData.firstName || 'Kullanıcı'} 
+                      alt={userData.firstName} 
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -781,24 +737,27 @@ export default function InboxPage() {
                 <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-medium shadow-md overflow-hidden border border-white/10">
                   <img 
                     src={getUserAvatar(userData)}
-                    alt={userData.firstName || 'Kullanıcı'} 
+                    alt={userData.firstName} 
                     className="w-full h-full object-cover" 
                   />
                 </div>
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-medium text-white truncate">{userData.firstName || 'Kullanıcı'} {userData.lastName}</p>
+                <p className="text-sm font-medium text-white truncate">{userData.firstName} {userData.lastName}</p>
                 <p className="text-xs text-gray-400 truncate">{userEmail}</p>
               </div>
             </div>
             
-            <a href="/profil" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
+            <Link 
+              href="/profil" 
+              className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
               Profil
-            </a>
+            </Link>
             
             <a href="/ayarlar" className="flex items-center px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
