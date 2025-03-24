@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { Person, ArrowBack, Settings, Edit, Camera, Mail, Phone, CalendarMonth, CloudUpload } from '@mui/icons-material';
-import Image from 'next/image';
+import { Person, ArrowBack, Mail, Phone, CalendarMonth } from '@mui/icons-material';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -14,15 +13,38 @@ export default function ProfilePage() {
   const [userData, setUserData] = useState({ 
     firstName: '',
     lastName: '',
+    email: '',
     bio: 'Merhaba! Ben PiiMail kullanıcısıyım.',
     location: 'İstanbul, Türkiye',
-    phone: '',
-    website: 'website.com',
+    phone: '+90 --- --- -- --',
     joinDate: '',
     avatarUrl: ''
   });
-  const [userEmail, setUserEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [storageUsage, setStorageUsage] = useState({
+    used: 0,
+    total: 200 * 1024 * 1024 // 200 MB
+  });
+  const [recentActivities, setRecentActivities] = useState([
+    {
+      type: 'email_sent',
+      title: 'Yeni e-posta gönderildi',
+      description: 'recipient@example.com adresine bir e-posta gönderdiniz',
+      time: '2 saat önce'
+    },
+    {
+      type: 'profile_updated',
+      title: 'Profil güncellendi',
+      description: 'Profil bilgilerinizi güncellediniz',
+      time: '1 gün önce'
+    },
+    {
+      type: 'folder_created',
+      title: 'Yeni klasör oluşturuldu',
+      description: '"Proje Belgeleri" klasörü oluşturuldu',
+      time: '3 gün önce'
+    }
+  ]);
   
   useEffect(() => {
     checkUser();
@@ -39,25 +61,61 @@ export default function ProfilePage() {
         }, 100);
       } else if (user) {
         // Kullanıcı e-postasını kaydet
-        setUserEmail(user.email || '');
-        console.log("ProfilePage - Kullanıcı oturumu doğrulandı, e-posta:", user.email);
+        setUserData(prev => ({ ...prev, email: user.email || '' }));
+        console.log("ProfilePage - Kullanıcı oturumu doğrulandı, id:", user.id);
         
-        // Kullanıcı oluşturulma tarihini hesapla
-        const createdAt = user.created_at;
-        const joinDate = createdAt ? formatJoinDate(createdAt) : 'Bilinmiyor';
+        // Profil bilgilerini çek
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, avatar_url')
+          .eq('id', user.id)
+          .single();
         
-        setUserData(prevData => ({
-          ...prevData,
-          joinDate
-        }));
+        if (profileError) {
+          console.error('ProfilePage - Profil bilgileri alınırken hata:', profileError.message);
+        } else if (profile) {
+          // Katılma tarihini hesapla
+          const createdAt = user.created_at;
+          const joinDate = createdAt ? formatJoinDate(createdAt) : 'Bilinmiyor';
+          
+          setUserData(prev => ({
+            ...prev,
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            avatarUrl: profile.avatar_url || '',
+            joinDate
+          }));
+        }
         
-        // Profil tablosundan bilgileri almaya çalış
-        fetchUserData(user.id);
+        // Depolama kullanımını hesapla
+        calculateStorageUsage(user.id);
       }
     } catch (error) {
       console.error("ProfilePage - Oturum kontrolü sırasında hata:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const calculateStorageUsage = async (userId: string) => {
+    try {
+      // Kullanıcının tüm dosyalarını al
+      const { data: files, error } = await supabase
+        .storage
+        .from('avatars')
+        .list(userId);
+      
+      if (error) throw error;
+      
+      // Toplam boyutu hesapla
+      const totalSize = files?.reduce((acc, file) => acc + (file.metadata?.size || 0), 0) || 0;
+      
+      setStorageUsage(prev => ({
+        ...prev,
+        used: totalSize
+      }));
+    } catch (error) {
+      console.error('Depolama kullanımı hesaplanırken hata:', error);
     }
   };
 
@@ -68,107 +126,49 @@ export default function ProfilePage() {
     return new Intl.DateTimeFormat('tr-TR', options).format(date);
   };
 
-  const fetchUserData = async (userId: string) => {
-    try {
-      console.log("ProfilePage - fetchUserData çağrıldı, userId:", userId);
-      
-      // users tablosundan temel bilgileri al
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('first_name, last_name, phone, avatar_url, bio')
-        .eq('id', userId)
-        .single();
-      
-      if (!userError && userData) {
-        console.log('ProfilePage - Users tablosundan kullanıcı verileri alındı:', userData);
-        
-        // Telefon numarası yok ise, güvenli bir varsayılan değer belirle
-        const phone = userData.phone || '+90 --- --- -- --';
-        const firstName = userData.first_name || '';
-        const lastName = userData.last_name || '';
-        
-        console.log('ProfilePage - Güncellenecek kullanıcı bilgileri:', { 
-          firstName, 
-          lastName, 
-          phone,
-          bio: userData.bio || '',
-          avatarUrl: userData.avatar_url || ''
-        });
-        
-        setUserData(prevData => ({
-          ...prevData,
-          firstName: firstName,
-          lastName: lastName,
-          phone: phone,
-          bio: userData.bio || prevData.bio,
-          avatarUrl: userData.avatar_url || ''
-        }));
-        return;
-      } else {
-        console.log('ProfilePage - Users tablosunda kullanıcı verileri bulunamadı, hata:', userError);
-      }
-      
-      // Eğer user tablosunda bilgi bulunamazsa, profiles tablosunu kontrol et
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url, phone')
-        .eq('id', userId)
-        .single();
-      
-      if (!profileError && profileData) {
-        console.log('ProfilePage - Profiles tablosundan kullanıcı verileri alındı:', profileData);
-        
-        let firstName = '';
-        let lastName = '';
-        
-        if (profileData.full_name) {
-          const nameParts = profileData.full_name.split(' ');
-          firstName = nameParts[0] || '';
-          lastName = nameParts.slice(1).join(' ') || '';
-        }
-        
-        console.log('ProfilePage - Profiles verilerinden ayrıştırılan ad-soyad:', { firstName, lastName });
-        
-        setUserData(prevData => ({
-          ...prevData,
-          firstName: firstName || prevData.firstName,
-          lastName: lastName || prevData.lastName,
-          phone: profileData.phone || prevData.phone,
-          avatarUrl: profileData.avatar_url || prevData.avatarUrl
-        }));
-      } else {
-        console.log('ProfilePage - Profiles tablosunda da kullanıcı verileri bulunamadı, hata:', profileError);
-      }
-    } catch (error) {
-      console.error('ProfilePage - Kullanıcı bilgileri alınırken beklenmeyen hata:', error);
-    }
-  };
-
   // Kullanıcı avatarını almak için fonksiyon
   const getUserAvatar = () => {
     if (userData.avatarUrl) {
       return userData.avatarUrl;
     }
-    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || userEmail || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`;
+    return `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(userData.firstName || userData.email || 'Kullanıcı')}&radius=50&backgroundColor=2563eb`;
+  };
+
+  // Depolama kullanımını formatla
+  const formatStorageSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-        <div className="w-12 h-12 border-4 border-t-blue-500 border-r-blue-400 border-blue-300/30 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-64 bg-gray-800 rounded-xl mb-20"></div>
+            <div className="space-y-6">
+              <div className="h-8 bg-gray-800 rounded w-1/4"></div>
+              <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+              <div className="h-4 bg-gray-800 rounded w-3/4"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white font-[family-name:var(--font-geist-sans)]">
-      <div className="max-w-6xl mx-auto p-4">
+    <div className="min-h-screen bg-gray-900 text-white p-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
             <button 
-              className="p-2 mr-3 bg-gray-800/50 hover:bg-gray-800/80 rounded-full transition-colors"
-              onClick={() => router.push('/gelenkutusu')}
+              onClick={() => router.back()} 
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
             >
               <ArrowBack />
             </button>
@@ -178,7 +178,6 @@ export default function ProfilePage() {
           </div>
           <div>
             <Link href="/ayarlar" className="px-4 py-2 bg-gray-800/60 hover:bg-gray-800/80 rounded-lg flex items-center text-gray-300 hover:text-white transition-colors border border-gray-700/60">
-              <Settings className="mr-2" fontSize="small" />
               Ayarlar
             </Link>
           </div>
@@ -198,48 +197,42 @@ export default function ProfilePage() {
                   alt={userData.firstName || 'Kullanıcı'} 
                   className="w-full h-full object-cover" 
                 />
-                <button 
-                  className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => router.push('/ayarlar')}
-                >
-                  <div className="p-2 bg-gray-900/80 rounded-full">
-                    <Camera fontSize="small" />
-                  </div>
-                </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Profile Info */}
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Left Column */}
-          <div className="w-full md:w-1/3">
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Left Column - User Info */}
+          <div className="md:col-span-1">
             <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg">
               <div className="p-6">
-                <h2 className="text-2xl font-bold">{userData.firstName} {userData.lastName}</h2>
-                <p className="text-gray-400 mt-1 flex items-center">
-                  <Mail fontSize="small" className="mr-1" /> {userEmail}
-                </p>
+                <h2 className="text-xl font-semibold mb-4">{userData.firstName} {userData.lastName}</h2>
+                <p className="text-gray-400 mb-6">{userData.bio}</p>
                 
-                <div className="mt-4 text-gray-300">
-                  {userData.bio}
-                </div>
-                
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-start">
-                    <CalendarMonth className="text-gray-400 mr-2 mt-0.5" fontSize="small" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-gray-300">
+                    <Mail className="text-gray-400" />
                     <div>
-                      <p className="text-sm text-gray-400">Katılma Tarihi</p>
-                      <p>{userData.joinDate}</p>
+                      <p className="text-sm text-gray-400">E-posta</p>
+                      <p>{userData.email}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-start">
-                    <Phone className="text-gray-400 mr-2 mt-0.5" fontSize="small" />
+                  <div className="flex items-center gap-3 text-gray-300">
+                    <Phone className="text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-400">Telefon</p>
                       <p>{userData.phone}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 text-gray-300">
+                    <CalendarMonth className="text-gray-400" />
+                    <div>
+                      <p className="text-sm text-gray-400">Katılma Tarihi</p>
+                      <p>{userData.joinDate}</p>
                     </div>
                   </div>
                 </div>
@@ -247,10 +240,10 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="flex-1">
-            {/* Activity Section */}
-            <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg mb-6">
+          {/* Right Column - Activities & Storage */}
+          <div className="md:col-span-2">
+            {/* Recent Activities */}
+            <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg mb-8">
               <div className="p-4 border-b border-gray-800/50 flex justify-between items-center">
                 <h3 className="font-semibold">Son Aktiviteler</h3>
                 <button className="text-blue-400 text-sm hover:text-blue-300">Tümünü Gör</button>
@@ -258,7 +251,7 @@ export default function ProfilePage() {
               
               <div className="p-4">
                 <div className="space-y-4">
-                  {[1, 2, 3].map((_, index) => (
+                  {recentActivities.map((activity, index) => (
                     <div key={index} className="flex p-3 bg-gray-800/30 rounded-lg">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center mr-3">
                         <Mail className="text-blue-400" />
@@ -266,16 +259,10 @@ export default function ProfilePage() {
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-medium">{index === 0 ? 'Yeni e-posta gönderildi' : index === 1 ? 'Profil güncellendi' : 'Yeni klasör oluşturuldu'}</p>
-                            <p className="text-sm text-gray-400 mt-1">
-                              {index === 0 
-                                ? 'recipient@example.com adresine bir e-posta gönderdiniz' 
-                                : index === 1 
-                                  ? 'Profil bilgilerinizi güncellediniz' 
-                                  : '"Proje Belgeleri" klasörü oluşturuldu'}
-                            </p>
+                            <p className="font-medium">{activity.title}</p>
+                            <p className="text-sm text-gray-400 mt-1">{activity.description}</p>
                           </div>
-                          <span className="text-xs text-gray-500">{index === 0 ? '2 saat önce' : index === 1 ? '1 gün önce' : '3 gün önce'}</span>
+                          <span className="text-sm text-gray-500">{activity.time}</span>
                         </div>
                       </div>
                     </div>
@@ -283,80 +270,26 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            
-            {/* Storage Section */}
+
+            {/* Storage Usage */}
             <div className="bg-gray-900/50 rounded-lg border border-gray-800/50 overflow-hidden shadow-lg">
               <div className="p-4 border-b border-gray-800/50">
                 <h3 className="font-semibold">Depolama Kullanımı</h3>
               </div>
               
               <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm">Kullanılan Alan</span>
-                  <span className="text-sm font-medium">10.06 MB / 200 MB</span>
+                <div className="mb-2 flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Kullanılan Alan</span>
+                  <span className="text-sm">
+                    {formatStorageSize(storageUsage.used)} / {formatStorageSize(storageUsage.total)}
+                  </span>
                 </div>
-                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{width: '5%'}}></div>
+                <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full"
+                    style={{ width: `${(storageUsage.used / storageUsage.total) * 100}%` }}
+                  ></div>
                 </div>
-                
-                <div className="mt-6">
-                  <div className="flex items-center justify-between py-3 border-b border-gray-800/50">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-md bg-blue-900/30 flex items-center justify-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                          <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium">Belgeler</p>
-                        <p className="text-sm text-gray-400">24 dosya</p>
-                      </div>
-                    </div>
-                    <span className="text-gray-400">4.2 MB</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between py-3 border-b border-gray-800/50">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-md bg-green-900/30 flex items-center justify-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                          <polyline points="21 15 16 10 5 21"></polyline>
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium">Görseller</p>
-                        <p className="text-sm text-gray-400">36 dosya</p>
-                      </div>
-                    </div>
-                    <span className="text-gray-400">3.8 MB</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between py-3">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-md bg-purple-900/30 flex items-center justify-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                          <polyline points="14 2 14 8 20 8"></polyline>
-                          <path d="M10 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"></path>
-                          <path d="M12 14v4"></path>
-                          <path d="M8 16h8"></path>
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-medium">Diğer</p>
-                        <p className="text-sm text-gray-400">12 dosya</p>
-                      </div>
-                    </div>
-                    <span className="text-gray-400">2.1 MB</span>
-                  </div>
-                </div>
-                
-                <button className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-lg flex items-center justify-center transition-colors">
-                  <CloudUpload className="mr-2" fontSize="small" />
-                  Dosya Yükle
-                </button>
               </div>
             </div>
           </div>
