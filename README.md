@@ -1,41 +1,48 @@
-# Pii.Mail  
+# 📫 Pii.Mail  
+🚀 A modern, secure, and user-friendly email application.
 
-🚀 **Modern, güvenli ve kullanıcı dostu bir e-posta uygulaması.**  
+---
 
-## 📌 Proje Hakkında  
+## 📌 About the Project
 
-Pii.Mail, **gizlilik ve güvenliği ön planda tutan** açık kaynaklı bir e-posta uygulamasıdır. Modern özellikleri güçlü güvenlik önlemleriyle birleştirerek **akıcı ve güvenilir bir e-posta deneyimi** sunar.  
+**Pii.Mail** is an open-source email client focused on **privacy**, **security**, and **usability**. It combines modern features with robust encryption to deliver a fast, clean, and secure email experience.
 
-## ✨ Özellikler  
+---
 
-✔ **🔒 Güvenli İletişim** – Uçtan uca şifreleme ile mesajlarınız koruma altında  
-✔ **⚡ Hızlı Arayüz** – Modern teknolojilerle geliştirilmiş akıcı ve sezgisel deneyim  
-✔ **🌙 Karanlık Tema** – Göz yorgunluğunu azaltan şık ve konforlu tasarım  
-✔ **🧠 Akıllı Filtreleme** – Yapay zeka destekli e-posta organizasyonu  
-✔ **📬 Çoklu Hesap Desteği** – Tüm e-posta hesaplarınızı tek bir arayüzden yönetin  
-✔ **📡 Offline Erişim** – İnternet bağlantısı olmadan e-postalarınıza erişin  
+## ✨ Features
 
-## 🛠 Kullanılan Teknolojiler  
+- 🔒 **End-to-End Encryption** – Keep your messages private and protected  
+- ⚡ **Blazing-Fast Interface** – Built with modern technologies for a smooth, intuitive experience  
+- 🌙 **Dark Mode** – A sleek design that reduces eye strain  
+- 🧠 **Smart Filtering** – AI-powered email organization  
+- 📬 **Multi-Account Support** – Manage all your inboxes in one place  
+- 📡 **Offline Access** – Read and manage emails without an internet connection  
+
+---
+
+## 🛠 Tech Stack
 
 - ⚛ **Next.js 14**  
 - 🏗 **React**  
 - 🔷 **TypeScript**  
 - 🎨 **Tailwind CSS**  
-- 🎭 **Framer Motion**  
+- 🎭 **Framer Motion**
 
-## 🚀 Kurulum  
+---
 
-Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:  
+## 🚀 Getting Started
+
+To run this project locally:
 
 ```bash
-# Depoyu klonlayın
+# Clone the repository
 git clone https://github.com/TolgaNogay/pimail.git
 
-# Proje dizinine gidin
+# Navigate into the project directory
 cd pimail
 
-# Bağımlılıkları yükleyin
+# Install dependencies
 npm install
 
-# Geliştirme sunucusunu başlatın
+# Start the development server
 npm run dev
